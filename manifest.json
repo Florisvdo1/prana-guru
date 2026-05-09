@@ -1,0 +1,17 @@
+{
+  "name": "PranaGuru - Advanced Pranayama",
+  "short_name": "PranaGuru",
+  "description": "Guru-level breathing exercises with perfect visual sync, timing & biofeedback. For certified practitioners only.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#14b8a6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%2314b8a6'/%3E%3Cpath d='M30 40 Q50 20 70 40' stroke='white' stroke-width='8' fill='none'/%3E%3Ccircle cx='50' cy='55' r='12' fill='white'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
