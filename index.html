@@ -1,1608 +1,1167 @@
-<!DOCTYPE html>
-<html lang="nl">
+<!doctype html>
+<html lang="nl" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0a0a0a">
-    <title>PranaGuru • Advanced Breath Mastery</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&amp;family=Playfair+Display:wght@700&amp;display=swap');
-        
-        :root {
-            --teal: #14b8a6;
-        }
-        
-        body {
-            font-family: 'Inter', system_ui, sans-serif;
-        }
-        
-        .heading-serif {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0F172A" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="PranaGuru" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="description" content="PranaGuru, een native-achtige PWA voor precieze ademhaling, pranayama en live guidance." />
+  <title>PranaGuru Elite</title>
 
-        .premium-dark {
-            background: #0a0a0a;
-            color: #f5f5f5;
-        }
+  <!-- PWA manifest. Een losse manifest file blijft de betrouwbare route voor iOS, Chromium en offline service worker scope. -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
+  <link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/splash-1179x2556.png" />
 
-        .section-header {
-            font-size: 1.35rem;
-            letter-spacing: -0.025em;
-            font-weight: 600;
-        }
+  <!-- CDN dependencies. De service worker runtime-cachet deze resources zodra de app online geopend is. Kritieke UI CSS staat inline, zodat offline fallback niet op Tailwind hangt. -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin />
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <script async src="https://cdn.tailwindcss.com"></script>
+  <script async src="https://unpkg.com/three@0.160.0/build/three.min.js" onload="window.dispatchEvent(new Event('three-ready'))"></script>
 
-        .exercise-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .exercise-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-        }
+  <style>
+    :root {
+      --bg: #0F172A;
+      --bg2: #111827;
+      --gold: #D4AF37;
+      --teal: #14B8A6;
+      --cream: #F6EAD1;
+      --muted: rgba(246, 234, 209, 0.66);
+      --line: rgba(246, 234, 209, 0.12);
+      --ink: #0B1020;
+      --green: #22C55E;
+      --blue: #38BDF8;
+      --hold: #D4AF37;
+      --danger: #FB7185;
+      --safeTop: env(safe-area-inset-top, 0px);
+      --safeRight: env(safe-area-inset-right, 0px);
+      --safeBottom: env(safe-area-inset-bottom, 0px);
+      --safeLeft: env(safe-area-inset-left, 0px);
+      --vh: 1vh;
+      --orbScale: 1;
+      --phaseColor: var(--teal);
+      --phaseGlow: rgba(20, 184, 166, 0.38);
+      --fontSans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
+      --fontSerif: Georgia, "Times New Roman", serif;
+    }
 
-        .exercise-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(to right, #14b8a6, #d1fae5);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .exercise-card:hover::before {
-            opacity: 1;
-        }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; width: 100%; min-height: 100%; background: #050816; color: var(--cream); font-family: var(--fontSans); overflow: hidden; }
+    body { min-height: calc(var(--vh) * 100); touch-action: manipulation; }
+    button, input, select { font: inherit; }
+    button { border: 0; color: inherit; }
+    .app-shell {
+      position: fixed; inset: 0; min-height: calc(var(--vh) * 100);
+      padding: calc(var(--safeTop) + 10px) calc(var(--safeRight) + 14px) calc(var(--safeBottom) + 14px) calc(var(--safeLeft) + 14px);
+      background:
+        radial-gradient(900px 560px at 50% -180px, rgba(212, 175, 55, .20), transparent 72%),
+        radial-gradient(650px 520px at 14% 24%, rgba(20, 184, 166, .13), transparent 68%),
+        linear-gradient(160deg, #0B1020 0%, #0F172A 54%, #050816 100%);
+      overflow: hidden;
+    }
+    .app-shell::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .32;
+      background-image:
+        linear-gradient(rgba(246, 234, 209, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(246, 234, 209, .03) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(ellipse at center, black, transparent 70%);
+    }
+    .iphone-frame { position: relative; width: min(100%, 430px); height: 100%; margin: 0 auto; display: flex; flex-direction: column; }
+    .screen { position: absolute; inset: 0; display: none; flex-direction: column; gap: 12px; z-index: 1; }
+    .screen.active { display: flex; }
+    .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 18px; }
+    .scroll::-webkit-scrollbar { display: none; }
+    .glass {
+      background: linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.035));
+      border: 1px solid rgba(246, 234, 209, .13);
+      box-shadow: 0 22px 70px rgba(0,0,0,.33), inset 0 1px 0 rgba(255,255,255,.08);
+      backdrop-filter: blur(22px) saturate(132%);
+      -webkit-backdrop-filter: blur(22px) saturate(132%);
+    }
+    .topbar { display: flex; justify-content: space-between; align-items: center; min-height: 48px; gap: 10px; z-index: 8; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .mark { width: 38px; height: 38px; border-radius: 18px; display: grid; place-items: center; color: var(--ink); font-weight: 900; letter-spacing: -.05em; background: radial-gradient(circle at 35% 28%, #fff7d6, var(--gold) 54%, #795b12); box-shadow: 0 12px 32px rgba(212,175,55,.22); }
+    .brand h1 { margin: 0; font-family: var(--fontSerif); font-size: 21px; line-height: 1; font-weight: 600; letter-spacing: -.02em; }
+    .brand p { margin: 2px 0 0; font-size: 10px; letter-spacing: .16em; color: rgba(246, 234, 209, .56); text-transform: uppercase; }
+    .icon-button { width: 42px; height: 42px; border-radius: 18px; display: grid; place-items: center; background: rgba(255,255,255,.07); border: 1px solid rgba(246,234,209,.13); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+    .icon-button:active { transform: scale(.97); }
+    .icon-button:focus-visible, .primary:focus-visible, .card:focus-visible, .seg button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    .hero { border-radius: 34px; padding: 20px; min-height: 174px; position: relative; overflow: hidden; }
+    .hero::after { content: ""; position: absolute; width: 180px; height: 180px; border-radius: 50%; right: -66px; top: -64px; background: radial-gradient(circle, rgba(212,175,55,.35), transparent 65%); filter: blur(4px); }
+    .eyebrow { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(246,234,209,.58); font-weight: 700; }
+    .hero-title { margin: 8px 0 8px; font-family: var(--fontSerif); font-size: 34px; line-height: .98; font-weight: 500; letter-spacing: -.045em; max-width: 290px; }
+    .hero-copy { color: rgba(246,234,209,.70); line-height: 1.45; font-size: 13px; max-width: 300px; margin: 0; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat { border-radius: 22px; padding: 12px; background: rgba(255,255,255,.055); border: 1px solid rgba(246,234,209,.09); }
+    .stat .value { font-size: 22px; font-weight: 760; letter-spacing: -.04em; }
+    .stat .label { font-size: 10px; color: rgba(246,234,209,.54); margin-top: 3px; }
+    .section-title { display: flex; justify-content: space-between; align-items: end; margin: 4px 2px 0; }
+    .section-title h2 { margin: 0; font-size: 16px; letter-spacing: -.02em; }
+    .section-title span { font-size: 11px; color: rgba(246,234,209,.52); }
+    .exercise-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .card { text-align: left; border-radius: 26px; padding: 14px; min-height: 138px; background: linear-gradient(150deg, rgba(255,255,255,.082), rgba(255,255,255,.028)); border: 1px solid rgba(246,234,209,.11); position: relative; overflow: hidden; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
+    .card::after { content: ""; position: absolute; inset: auto -22px -38px auto; width: 116px; height: 116px; border-radius: 50%; background: radial-gradient(circle, var(--cardGlow, rgba(20,184,166,.18)), transparent 70%); pointer-events: none; }
+    .card:active { transform: scale(.985); }
+    .card:hover { border-color: rgba(212,175,55,.34); background: rgba(255,255,255,.09); }
+    .card-top { display: flex; justify-content: space-between; align-items: start; gap: 8px; position: relative; z-index: 1; }
+    .glyph { width: 38px; height: 38px; border-radius: 18px; display: grid; place-items: center; background: rgba(246,234,209,.08); color: var(--gold); font-size: 22px; }
+    .tag { font-size: 9px; color: rgba(246,234,209,.58); border: 1px solid rgba(246,234,209,.12); border-radius: 999px; padding: 3px 6px; white-space: nowrap; }
+    .card h3 { margin: 12px 0 6px; font-size: 14px; line-height: 1.12; letter-spacing: -.025em; position: relative; z-index: 1; }
+    .card p { margin: 0; font-size: 11px; color: rgba(246,234,209,.58); line-height: 1.35; position: relative; z-index: 1; }
+    .primary { width: 100%; min-height: 52px; border-radius: 24px; background: linear-gradient(135deg, #F8E8A6, var(--gold) 58%, #9F741D); color: #121520; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; box-shadow: 0 18px 45px rgba(212,175,55,.22); }
+    .secondary { min-height: 46px; border-radius: 22px; padding: 0 16px; background: rgba(255,255,255,.07); border: 1px solid rgba(246,234,209,.12); color: var(--cream); }
+    .primary:active, .secondary:active { transform: scale(.985); }
+    .sheet { position: fixed; inset: 0; z-index: 30; display: none; align-items: end; justify-content: center; background: rgba(1, 4, 12, .62); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 16px; padding-bottom: calc(var(--safeBottom) + 16px); }
+    .sheet.active { display: flex; }
+    .sheet-panel { width: min(100%, 430px); max-height: calc(var(--vh) * 92); overflow: auto; border-radius: 32px; padding: 18px; }
+    .sheet-panel h2 { margin: 4px 0 8px; font-family: var(--fontSerif); font-size: 28px; line-height: 1; letter-spacing: -.04em; }
+    .sheet-panel p { color: rgba(246,234,209,.70); line-height: 1.46; font-size: 13px; }
+    .benefits { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+    .benefit { font-size: 11px; padding: 7px 9px; border-radius: 999px; background: rgba(20,184,166,.10); color: #A7F3D0; border: 1px solid rgba(20,184,166,.18); }
+    .seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; border-radius: 22px; padding: 5px; background: rgba(255,255,255,.06); border: 1px solid rgba(246,234,209,.10); }
+    .seg button { min-height: 38px; border-radius: 18px; background: transparent; color: rgba(246,234,209,.62); font-weight: 740; }
+    .seg button.active { background: rgba(246,234,209,.12); color: var(--cream); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+    .slider-row { margin: 12px 0; }
+    .slider-head { display: flex; justify-content: space-between; font-size: 12px; color: rgba(246,234,209,.70); margin-bottom: 8px; }
+    input[type="range"] { width: 100%; accent-color: var(--gold); }
 
-        .breathing-visual {
-            width: 280px;
-            height: 280px;
-            margin: 0 auto;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    .session-top { display: grid; grid-template-columns: 42px 1fr 42px; align-items: center; gap: 8px; min-height: 52px; z-index: 8; }
+    .session-title { text-align: center; min-width: 0; }
+    .session-title h2 { margin: 0; font-family: var(--fontSerif); font-size: 19px; font-weight: 500; letter-spacing: -.025em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-title p { margin: 2px 0 0; font-size: 10px; color: rgba(246,234,209,.54); letter-spacing: .12em; text-transform: uppercase; }
+    .canvas-wrap { position: relative; flex: 1; min-height: 0; border-radius: 36px; overflow: hidden; background: radial-gradient(circle at 50% 28%, rgba(246,234,209,.06), rgba(255,255,255,.02) 40%, rgba(0,0,0,.14) 100%); border: 1px solid rgba(246,234,209,.11); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 24px 90px rgba(0,0,0,.30); }
+    .canvas-wrap::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.20)); }
+    #threeCanvas, #ritualCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #ritualCanvas { z-index: 2; mix-blend-mode: screen; opacity: .92; }
+    .orb-fallback { position: absolute; left: 50%; top: 43%; width: 216px; height: 216px; margin: -108px 0 0 -108px; border-radius: 50%; transform: scale(var(--orbScale)); background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.68), var(--phaseColor) 28%, rgba(212,175,55,.46) 52%, rgba(15,23,42,.06) 72%); box-shadow: 0 0 70px var(--phaseGlow), inset -28px -34px 58px rgba(0,0,0,.34), inset 18px 18px 46px rgba(255,255,255,.15); transition: transform .08s linear; z-index: 1; }
+    .orb-fallback::before, .orb-fallback::after { content: ""; position: absolute; inset: -26px; border: 1px solid rgba(246,234,209,.15); border-radius: 50%; box-shadow: 0 0 38px var(--phaseGlow); }
+    .orb-fallback::after { inset: -54px; opacity: .58; }
+    .phase-hud { position: absolute; z-index: 5; left: 16px; right: 72px; top: 16px; display: block; }
+    .guidance { border-radius: 24px; padding: 13px 14px; background: rgba(5, 8, 22, .56); border: 1px solid rgba(246,234,209,.11); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .guidance .label { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--phaseColor); font-weight: 800; }
+    .guidance .text { margin-top: 5px; font-size: 13px; line-height: 1.34; color: rgba(246,234,209,.84); }
+    .canvas-gear { position: absolute; z-index: 9; right: 16px; top: 16px; }
+    .counter { position: absolute; z-index: 8; right: 16px; top: 66px; width: 82px; height: 82px; border-radius: 28px; display: grid; place-items: center; background: rgba(5,8,22,.60); border: 1px solid rgba(246,234,209,.11); color: var(--cream); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .counter span { font-size: 37px; font-weight: 850; letter-spacing: -.08em; text-shadow: 0 8px 30px var(--phaseGlow); will-change: transform, filter; }
+    .counter.bump span { animation: numberBump .34s ease; }
+    @keyframes numberBump { 0% { transform: translateY(3px) scale(.94); filter: blur(2px); opacity: .62; } 100% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; } }
+    .phase-strip { position: absolute; z-index: 5; left: 16px; right: 16px; bottom: 154px; }
+    .progress-line { height: 7px; border-radius: 999px; background: rgba(246,234,209,.09); overflow: hidden; border: 1px solid rgba(246,234,209,.07); }
+    .progress-line > i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--phaseColor), var(--gold)); box-shadow: 0 0 22px var(--phaseGlow); }
+    .session-line { height: 5px; margin-top: 8px; border-radius: 999px; background: rgba(246,234,209,.07); overflow: hidden; }
+    .session-line > i { display: block; height: 100%; width: 0; background: rgba(246,234,209,.66); }
+    .bio-row { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: rgba(246,234,209,.62); }
+    .phase-pill { color: var(--phaseColor); font-weight: 800; }
+    .session-controls { position: absolute; z-index: 7; left: 16px; right: 16px; bottom: 16px; bottom: calc(var(--safeBottom) + 16px); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .control { min-height: 52px; border-radius: 22px; background: rgba(5,8,22,.66); border: 1px solid rgba(246,234,209,.12); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); font-weight: 800; font-size: 12px; }
+    .control.primary-control { background: linear-gradient(135deg, rgba(246,234,209,.92), var(--gold)); color: #111827; }
+    .live-sliders { position: absolute; z-index: 6; left: 16px; right: 16px; bottom: 82px; border-radius: 26px; padding: 10px 12px; background: rgba(5,8,22,.54); border: 1px solid rgba(246,234,209,.10); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    .mini-sliders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .mini label { display: flex; justify-content: space-between; font-size: 9px; color: rgba(246,234,209,.62); margin-bottom: 3px; }
+    .mini input { height: 20px; }
+    .install-card { border-radius: 26px; padding: 14px; display: none; gap: 12px; align-items: center; }
+    .install-card.active { display: flex; }
+    .install-card p { margin: 0; color: rgba(246,234,209,.68); font-size: 12px; line-height: 1.35; }
+    .install-card strong { color: var(--cream); }
+    .install-card button { margin-left: auto; white-space: nowrap; }
+    .settings-grid { display: grid; gap: 10px; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border-radius: 22px; background: rgba(255,255,255,.05); border: 1px solid rgba(246,234,209,.09); }
+    .setting-row small { display: block; margin-top: 3px; color: rgba(246,234,209,.50); line-height: 1.3; }
+    .switch { width: 50px; height: 30px; border-radius: 999px; padding: 3px; background: rgba(255,255,255,.12); border: 1px solid rgba(246,234,209,.10); flex: none; }
+    .switch i { display: block; width: 24px; height: 24px; border-radius: 50%; background: rgba(246,234,209,.84); transition: transform .2s ease, background .2s ease; }
+    .switch.on { background: rgba(20,184,166,.28); }
+    .switch.on i { transform: translateX(20px); background: var(--teal); }
+    .toast { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%) translateY(20px); bottom: calc(var(--safeBottom) + 18px); width: min(92vw, 390px); border-radius: 22px; padding: 12px 14px; opacity: 0; pointer-events: none; transition: opacity .22s ease, transform .22s ease; background: rgba(5,8,22,.82); border: 1px solid rgba(246,234,209,.13); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); color: rgba(246,234,209,.86); font-size: 13px; }
+    .toast.active { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .a11y-high-contrast { --bg: #020617; --cream: #FFF7D6; --muted: rgba(255,247,214,.82); --line: rgba(255,247,214,.32); }
+    .a11y-high-contrast .glass, .a11y-high-contrast .card, .a11y-high-contrast .control { border-color: rgba(255,247,214,.32); }
+    .reduced-motion *, .reduced-motion *::before, .reduced-motion *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
-        .main-orb {
-            width: 220px;
-            height: 220px;
-            border-radius: 9999px;
-            background: radial-gradient(circle at 40% 30%, #1a3a3a, #0f2a2a 40%, #14b8a6 85%);
-            box-shadow: 
-                0 0 60px rgba(20, 184, 166, 0.6),
-                inset 0 0 40px rgba(255,255,255,0.15),
-                inset 40px 40px 60px rgba(0,0,0,0.4);
-            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            border: 1px solid rgba(20, 184, 166, 0.3);
-        }
-
-        .energy-ring {
-            position: absolute;
-            border-radius: 9999px;
-            border: 2px solid rgba(20, 184, 166, 0.25);
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        .phase-text {
-            font-size: 1.65rem;
-            font-weight: 600;
-            letter-spacing: -0.03em;
-            transition: all 0.2s ease;
-        }
-
-        .synced-text {
-            font-size: 1.05rem;
-            line-height: 1.4;
-            font-weight: 500;
-        }
-
-        .nav-active {
-            color: #14b8a6;
-            font-weight: 600;
-        }
-
-        .stat-value {
-            font-variant-numeric: tabular-nums;
-        }
-
-        .guru-badge {
-            background: linear-gradient(90deg, #14b8a6, #0d9488);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .premium-shadow {
-            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
-        }
-
-        .breathing-phase {
-            animation: phase-glow 1.5s ease-in-out infinite;
-        }
-
-        @keyframes phase-glow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.85; }
-        }
-
-        .belly-indicator {
-            width: 180px;
-            height: 42px;
-            background: linear-gradient(#14b8a6, #0d9488);
-            border-radius: 9999px;
-            box-shadow: 0 0 15px rgba(20, 184, 166, 0.5);
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                       box-shadow 0.6s ease;
-        }
-
-        .hand-mudra {
-            width: 160px;
-            height: 160px;
-            position: relative;
-        }
-
-        .nostril {
-            transition: all 0.3s ease;
-        }
-
-        .metric {
-            font-variant-numeric: tabular-nums;
-            font-feature-settings: "tnum";
-        }
-    </style>
+    @media (max-height: 790px) {
+      .hero { min-height: 146px; padding: 16px; }
+      .hero-title { font-size: 29px; }
+      .stats { gap: 6px; }
+      .stat { padding: 10px; }
+      .card { min-height: 126px; padding: 12px; }
+      .phase-strip { bottom: 142px; }
+      .live-sliders { bottom: 76px; }
+      .session-controls { gap: 7px; }
+      .control { min-height: 48px; }
+    }
+  </style>
 </head>
-<body class="premium-dark text-white overflow-x-hidden">
-    <!-- Top Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/10">
-        <div class="max-w-[420px] mx-auto px-5 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-x-3">
-                <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg">
-                    <i class="fa-solid fa-wind text-white text-2xl"></i>
-                </div>
-                <div>
-                    <div class="font-semibold text-2xl tracking-tighter">PranaGuru</div>
-                    <div class="text-[10px] text-teal-400 -mt-1 font-medium">GURU LEVEL • 2026</div>
-                </div>
+<body>
+  <div class="app-shell" id="appShell">
+    <div class="iphone-frame" id="iphoneFrame">
+      <main class="screen active" id="homeScreen" aria-label="PranaGuru dashboard">
+        <header class="topbar">
+          <div class="brand" aria-label="PranaGuru">
+            <div class="mark">P</div>
+            <div>
+              <h1>PranaGuru</h1>
+              <p>Elite breath PWA</p>
             </div>
-            
-            <div class="flex items-center gap-x-2">
-                <!-- Language Toggle -->
-                <div class="flex items-center bg-white/5 rounded-3xl p-1 text-xs font-medium">
-                    <button onclick="setLanguage('nl')" id="lang-nl"
-                            class="px-3 py-1 rounded-3xl transition-all active:scale-95">NL</button>
-                    <button onclick="setLanguage('en')" id="lang-en"
-                            class="px-3 py-1 rounded-3xl transition-all active:scale-95">EN</button>
-                </div>
-                
-                <button onclick="showSettings()" 
-                        class="w-9 h-9 flex items-center justify-center text-white/70 hover:text-white transition-colors">
-                    <i class="fa-solid fa-cog text-xl"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
+          </div>
+          <button class="icon-button" id="settingsButton" aria-label="Instellingen openen" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" stroke-width="1.7"/><path d="M19.2 13.2a7.7 7.7 0 0 0 .05-1.2 7.7 7.7 0 0 0-.05-1.2l2-1.55-2-3.46-2.35.95a7.5 7.5 0 0 0-2.05-1.2L14.45 3h-4.9L9.2 5.54a7.5 7.5 0 0 0-2.05 1.2l-2.35-.95-2 3.46 2 1.55A7.7 7.7 0 0 0 4.75 12c0 .4.02.8.05 1.2l-2 1.55 2 3.46 2.35-.95a7.5 7.5 0 0 0 2.05 1.2l.35 2.54h4.9l.35-2.54a7.5 7.5 0 0 0 2.05-1.2l2.35.95 2-3.46-2-1.55Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </button>
+        </header>
 
-    <div class="max-w-[420px] mx-auto pt-16 pb-24 px-5">
-        
-        <!-- Dashboard Header -->
-        <div class="pt-6 pb-4">
-            <div class="flex justify-between items-end">
-                <div>
-                    <div class="text-sm text-white/50">Goedemorgen, Floris</div>
-                    <div class="text-4xl font-semibold tracking-tighter">Prana vandaag?</div>
-                </div>
-                <div class="text-right">
-                    <div class="inline-flex items-center gap-x-1.5 bg-white/5 px-3 py-1 rounded-3xl text-xs">
-                        <i class="fa-solid fa-fire text-orange-400"></i>
-                        <span id="streak-count" class="font-semibold">47</span>
-                        <span class="text-white/50">dagen</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="scroll" id="homeScroll">
+          <section class="hero glass">
+            <div class="eyebrow" id="standaloneBadge">iPhone 15 Pro portrait</div>
+            <h2 class="hero-title">Rust als precisie-instrument.</h2>
+            <p class="hero-copy">Tien ademprotocollen met absolute timing, live guidance, haptische fase cues en een eigen visueel systeem per techniek.</p>
+          </section>
 
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-3 gap-3 mb-8">
-            <div class="bg-white/5 rounded-3xl p-4">
-                <div class="text-xs text-white/50 mb-1">Rust-HR</div>
-                <div class="flex items-baseline gap-x-1">
-                    <span id="resting-hr" class="text-3xl font-semibold metric">52</span>
-                    <span class="text-sm text-white/50">bpm</span>
-                </div>
-                <div class="text-[10px] text-emerald-400 flex items-center gap-x-1 mt-1">
-                    <i class="fa-solid fa-arrow-trend-down"></i>
-                    <span>-4 vandaag</span>
-                </div>
-            </div>
-            <div class="bg-white/5 rounded-3xl p-4">
-                <div class="text-xs text-white/50 mb-1">HRV</div>
-                <div class="flex items-baseline gap-x-1">
-                    <span id="hrv-score" class="text-3xl font-semibold metric">87</span>
-                    <span class="text-sm text-white/50">ms</span>
-                </div>
-                <div class="text-[10px] text-emerald-400 flex items-center gap-x-1 mt-1">
-                    <i class="fa-solid fa-arrow-trend-up"></i>
-                    <span>+12 deze week</span>
-                </div>
-            </div>
-            <div class="bg-white/5 rounded-3xl p-4">
-                <div class="text-xs text-white/50 mb-1">GABA Index</div>
-                <div class="flex items-baseline gap-x-1">
-                    <span id="gaba-score" class="text-3xl font-semibold metric">94</span>
-                    <span class="text-sm text-white/50">/100</span>
-                </div>
-                <div class="text-[10px] text-emerald-400 flex items-center gap-x-1 mt-1">
-                    <i class="fa-solid fa-brain"></i>
-                    <span>Excellent</span>
-                </div>
-            </div>
-        </div>
+          <section class="install-card glass" id="installCard" aria-live="polite">
+            <div class="glyph">⌂</div>
+            <p><strong>Installeer op je beginscherm.</strong><br><span id="installText">Open in Safari, tik Delen, daarna Zet op beginscherm.</span></p>
+            <button class="secondary" id="installButton" type="button">Install</button>
+          </section>
 
-        <!-- Daily Protocol -->
-        <div class="mb-8">
-            <div class="flex items-center justify-between mb-3 px-1">
-                <div class="section-header">Dagprotocol</div>
-                <button onclick="startDailyProtocol()" 
-                        class="text-xs flex items-center gap-x-1.5 px-4 py-2 bg-white/10 hover:bg-white/15 transition-colors rounded-3xl text-white/90 active:scale-[0.985]">
-                    <i class="fa-solid fa-play mr-1"></i>
-                    <span class="font-medium">Start protocol</span>
-                </button>
-            </div>
-            
-            <div class="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-3xl p-5 flex items-center gap-x-4">
-                <div class="flex-1">
-                    <div class="font-semibold">Ochtend • Wim Hof + Physiological Sigh</div>
-                    <div class="text-xs text-white/50 mt-0.5">3 rondes + 3 sighs • 14 min</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-2xl inline-block">Klaar</div>
-                </div>
-            </div>
-        </div>
+          <section class="stats" aria-label="Sessiestatistieken">
+            <div class="stat"><div class="value" id="streakValue">0</div><div class="label">dagen streak</div></div>
+            <div class="stat"><div class="value" id="minutesValue">0</div><div class="label">minuten</div></div>
+            <div class="stat"><div class="value" id="sessionsValue">0</div><div class="label">sessies</div></div>
+          </section>
 
-        <!-- Library Header -->
-        <div class="flex items-center justify-between mb-4 px-1">
-            <div class="section-header">Guru Oefeningen</div>
-            <div class="text-xs text-white/50">10 technieken • Gecertificeerd niveau</div>
+          <section class="section-title">
+            <h2>Guru oefeningen</h2>
+            <span>10 technieken</span>
+          </section>
+          <section class="exercise-grid" id="exerciseGrid" aria-label="Ademhalingsoefeningen"></section>
         </div>
+      </main>
 
-        <!-- Exercises Grid -->
-        <div id="exercises-grid" class="grid grid-cols-2 gap-3.5">
-            <!-- Populated by JS -->
-        </div>
+      <main class="screen" id="sessionScreen" aria-label="Ademsessie" aria-live="polite">
+        <header class="session-top">
+          <button class="icon-button" id="exitSessionButton" aria-label="Sessie stoppen" type="button">×</button>
+          <div class="session-title">
+            <h2 id="sessionName">PranaGuru</h2>
+            <p id="sessionMeta">absolute timing</p>
+          </div>
+          <button class="icon-button" id="sessionSettingsButton" aria-label="Instellingen openen" type="button">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" stroke-width="1.7"/><path d="M19.2 13.2a7.7 7.7 0 0 0 .05-1.2 7.7 7.7 0 0 0-.05-1.2l2-1.55-2-3.46-2.35.95a7.5 7.5 0 0 0-2.05-1.2L14.45 3h-4.9L9.2 5.54a7.5 7.5 0 0 0-2.05 1.2l-2.35-.95-2 3.46 2 1.55A7.7 7.7 0 0 0 4.75 12c0 .4.02.8.05 1.2l-2 1.55 2 3.46 2.35-.95a7.5 7.5 0 0 0 2.05 1.2l.35 2.54h4.9l.35-2.54a7.5 7.5 0 0 0 2.05-1.2l2.35.95 2-3.46-2-1.55Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </button>
+        </header>
 
-        <!-- Bottom Info -->
-        <div class="mt-10 text-center">
-            <div class="inline-flex items-center gap-x-2 text-[10px] text-white/40">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span>Alleen voor gecertificeerde beoefenaars • Jij bent er een</span>
+        <section class="canvas-wrap" id="visualStage" aria-label="Live ademvisualisatie">
+          <canvas id="threeCanvas" aria-hidden="true"></canvas>
+          <canvas id="ritualCanvas" aria-hidden="true"></canvas>
+          <div class="orb-fallback" id="orbFallback" aria-hidden="true"></div>
+
+          <button class="icon-button canvas-gear" id="canvasSettingsButton" aria-label="Instellingen openen" type="button">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" stroke-width="1.7"/><path d="M19.2 13.2a7.7 7.7 0 0 0 .05-1.2 7.7 7.7 0 0 0-.05-1.2l2-1.55-2-3.46-2.35.95a7.5 7.5 0 0 0-2.05-1.2L14.45 3h-4.9L9.2 5.54a7.5 7.5 0 0 0-2.05 1.2l-2.35-.95-2 3.46 2 1.55A7.7 7.7 0 0 0 4.75 12c0 .4.02.8.05 1.2l-2 1.55 2 3.46 2.35-.95a7.5 7.5 0 0 0 2.05 1.2l.35 2.54h4.9l.35-2.54a7.5 7.5 0 0 0 2.05-1.2l2.35.95 2-3.46-2-1.55Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </button>
+
+          <div class="phase-hud">
+            <div class="guidance">
+              <div class="label" id="phaseLabel">Inhale</div>
+              <div class="text" id="phaseGuidance">Adem rustig in door de neus.</div>
             </div>
-        </div>
+          </div>
+          <div class="counter" id="counterBox"><span id="phaseCounter">0</span></div>
+
+          <div class="phase-strip">
+            <div class="progress-line" aria-label="Fase voortgang"><i id="phaseProgress"></i></div>
+            <div class="session-line" aria-label="Sessie voortgang"><i id="sessionProgress"></i></div>
+            <div class="bio-row">
+              <span id="remainingTime">00:00 resterend</span>
+              <span class="phase-pill" id="phaseTypePill">inhale</span>
+              <span id="roundInfo">ronde 1</span>
+            </div>
+          </div>
+
+          <div class="live-sliders" id="liveSliders" aria-label="Live timing instellingen">
+            <div class="mini-sliders">
+              <div class="mini"><label for="liveInhale"><span>In</span><b id="liveInhaleValue">5.0s</b></label><input id="liveInhale" type="range" min="0.5" max="12" step="0.5" value="5" /></div>
+              <div class="mini"><label for="liveHold"><span>Hold</span><b id="liveHoldValue">4.0s</b></label><input id="liveHold" type="range" min="0" max="18" step="0.5" value="4" /></div>
+              <div class="mini"><label for="liveExhale"><span>Uit</span><b id="liveExhaleValue">6.0s</b></label><input id="liveExhale" type="range" min="0.5" max="18" step="0.5" value="6" /></div>
+            </div>
+          </div>
+
+          <div class="session-controls">
+            <button class="control" id="backPhaseButton" type="button">Vorige</button>
+            <button class="control primary-control" id="pauseButton" type="button">Pauze</button>
+            <button class="control" id="nextPhaseButton" type="button">Volgende</button>
+          </div>
+        </section>
+      </main>
     </div>
+  </div>
 
-    <!-- Exercise Detail Modal -->
-    <div id="detail-modal" onclick="if (event.target.id === 'detail-modal') hideDetailModal()" 
-         class="hidden fixed inset-0 bg-black/90 z-[100] flex items-end md:items-center justify-center">
-        <div onclick="event.stopImmediatePropagation()" 
-             class="bg-[#111111] w-full max-w-[420px] rounded-t-3xl md:rounded-3xl p-6 max-h-[92vh] overflow-auto">
-            
-            <div class="flex justify-between items-start mb-5">
-                <div id="modal-icon" class="text-5xl"></div>
-                <button onclick="hideDetailModal()" class="text-white/50 hover:text-white p-2 -mr-2">
-                    <i class="fa-solid fa-times text-2xl"></i>
-                </button>
-            </div>
-            
-            <div id="modal-name" class="text-3xl font-semibold tracking-tighter mb-1"></div>
-            <div id="modal-tags" class="flex gap-2 mb-4"></div>
-            
-            <div class="prose prose-invert text-sm leading-relaxed text-white/80 mb-6" id="modal-description"></div>
-            
-            <div class="mb-6">
-                <div class="text-xs uppercase tracking-[1px] text-white/50 mb-2 px-1">Voordelen</div>
-                <div id="modal-benefits" class="flex flex-wrap gap-2"></div>
-            </div>
-            
-            <div class="mb-6">
-                <div class="text-xs uppercase tracking-[1px] text-white/50 mb-2 px-1">Duur kiezen</div>
-                <div id="duration-buttons" class="flex gap-2 flex-wrap"></div>
-            </div>
-            
-            <button onclick="startSessionFromModal()"
-                    class="w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:brightness-105 active:scale-[0.985] transition-all rounded-3xl font-semibold text-lg flex items-center justify-center gap-x-3 shadow-xl">
-                <i class="fa-solid fa-play"></i>
-                <span>BEGIN SESSIE</span>
-            </button>
-            
-            <div class="text-center mt-4">
-                <div class="text-[10px] text-white/40">Exacte klassieke timing • Live gesynchroniseerd</div>
-            </div>
-        </div>
+  <section class="sheet" id="onboardingSheet" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+    <div class="sheet-panel glass">
+      <div class="card-top"><div class="glyph">◉</div><button class="icon-button" id="closeOnboardingSheet" aria-label="Onboarding sluiten" type="button">×</button></div>
+      <h2 id="onboardingTitle">Adem met meetkundige rust.</h2>
+      <p>PranaGuru gebruikt absolute timing, fase cues, haptics waar beschikbaar en offline caching. Zit neer, forceer retenties niet, stop bij duizeligheid, tintelingen die onaangenaam worden of druk in hoofd of borst.</p>
+      <div class="benefits"><span class="benefit">safe area ready</span><span class="benefit">offline na eerste load</span><span class="benefit">keyboard support</span><span class="benefit">haptics toggle</span></div>
+      <button class="primary" id="startOnboardingButton" type="button">Open dashboard</button>
     </div>
+  </section>
 
-    <!-- Session View (Full Immersive) -->
-    <div id="session-view" class="hidden fixed inset-0 bg-[#0a0a0a] z-[200] flex flex-col">
-        <!-- Session Header -->
-        <div class="px-5 pt-5 pb-3 flex items-center justify-between border-b border-white/10">
-            <div class="flex items-center gap-x-3">
-                <button onclick="endSession()" class="text-white/60 hover:text-white transition-colors px-2">
-                    <i class="fa-solid fa-chevron-left text-xl"></i>
-                </button>
-                <div>
-                    <div id="session-exercise-name" class="font-semibold text-lg"></div>
-                    <div id="session-timer" class="text-xs text-white/50 font-mono">11:00 resterend</div>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-x-4 text-sm">
-                <button onclick="toggleSound()" id="sound-btn"
-                        class="w-9 h-9 flex items-center justify-center text-white/70 hover:text-white">
-                    <i class="fa-solid fa-volume-up text-xl"></i>
-                </button>
-                <button onclick="toggleVoice()" id="voice-btn"
-                        class="w-9 h-9 flex items-center justify-center text-white/70 hover:text-white">
-                    <i class="fa-solid fa-microphone text-xl"></i>
-                </button>
-                <button onclick="pauseSession()" id="pause-btn"
-                        class="w-9 h-9 flex items-center justify-center text-white/70 hover:text-white">
-                    <i class="fa-solid fa-pause text-xl"></i>
-                </button>
-            </div>
-        </div>
+  <section class="sheet" id="exerciseSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-panel glass">
+      <div class="card-top">
+        <div class="glyph" id="sheetGlyph">◉</div>
+        <button class="icon-button" id="closeExerciseSheet" aria-label="Sluiten" type="button">×</button>
+      </div>
+      <h2 id="sheetTitle">Oefening</h2>
+      <p id="sheetDescription">Beschrijving.</p>
+      <div class="benefits" id="sheetBenefits"></div>
 
-        <!-- Main Visual Area -->
-        <div class="flex-1 flex flex-col items-center justify-center px-5 relative">
-            
-            <!-- Breathing Visual -->
-            <div id="visual-container" class="breathing-visual mb-8">
-                <!-- Dynamic content injected by JS -->
-                <div id="main-visual" class="main-orb flex items-center justify-center relative">
-                    <!-- Inner rings added via JS -->
-                    <div id="inner-rings"></div>
-                    
-                    <!-- Belly indicator -->
-                    <div id="belly-indicator" 
-                         class="absolute bottom-[-18px] left-1/2 -translate-x-1/2 belly-indicator hidden"
-                         style="box-shadow: 0 0 25px rgba(20, 184, 166, 0.7);">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Phase Information -->
-            <div class="text-center w-full max-w-[300px]">
-                <div id="phase-label" 
-                     class="phase-text text-teal-400 mb-1 tracking-[-0.02em]"></div>
-                
-                <div id="phase-instruction" 
-                     class="synced-text text-white/90 min-h-[52px]"></div>
-                
-                <!-- Phase Progress -->
-                <div class="mt-5 mb-2 px-1">
-                    <div class="h-1 bg-white/10 rounded-full overflow-hidden">
-                        <div id="phase-progress" 
-                             class="h-1 bg-gradient-to-r from-teal-400 to-white rounded-full transition-all duration-200"
-                             style="width: 0%"></div>
-                    </div>
-                </div>
-                
-                <div class="flex justify-between text-[10px] text-white/40 px-1 font-mono">
-                    <div id="phase-time">0.0s</div>
-                    <div id="phase-name"></div>
-                </div>
-            </div>
-            
-            <!-- Special Visuals -->
-            <div id="special-visual" class="mt-4 hidden">
-                <!-- Populated for alternate nostril etc. -->
-            </div>
-            
-        </div>
+      <div class="seg" aria-label="Guidance modus">
+        <button id="beginnerModeButton" type="button">Beginner</button>
+        <button id="guruModeButton" type="button">Guru</button>
+      </div>
 
-        <!-- Bottom Controls -->
-        <div class="px-5 pb-8 pt-4 border-t border-white/10 bg-[#0a0a0a]">
-            <div class="flex items-center justify-between text-xs mb-4 px-1">
-                <div>
-                    <span class="text-white/50">Ronde</span> 
-                    <span id="round-counter" class="font-semibold text-lg tabular-nums">1/4</span>
-                </div>
-                <div class="text-right">
-                    <span id="total-breaths" class="font-mono text-white/70"></span>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-3 gap-3">
-                <button onclick="skipPhase()" 
-                        class="py-3.5 bg-white/5 hover:bg-white/10 active:bg-white/15 transition-all rounded-3xl text-sm font-medium flex items-center justify-center gap-x-2">
-                    <i class="fa-solid fa-forward"></i>
-                    <span>Volgende fase</span>
-                </button>
-                
-                <button onclick="endSession()" 
-                        class="py-3.5 bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 text-red-400 transition-all rounded-3xl text-sm font-medium flex items-center justify-center gap-x-2">
-                    <i class="fa-solid fa-stop"></i>
-                    <span>Stoppen</span>
-                </button>
-                
-                <button onclick="completeSession()" 
-                        class="py-3.5 bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 text-emerald-400 transition-all rounded-3xl text-sm font-medium flex items-center justify-center gap-x-2">
-                    <i class="fa-solid fa-check-double"></i>
-                    <span>Afronden</span>
-                </button>
-            </div>
-        </div>
+      <div class="slider-row">
+        <div class="slider-head"><label for="durationSlider">Sessie duur</label><b id="durationValue">8 min</b></div>
+        <input id="durationSlider" type="range" min="2" max="20" step="1" value="8" />
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><label for="inhaleSlider">Inhale duration</label><b id="inhaleValue">5.0s</b></div>
+        <input id="inhaleSlider" type="range" min="0.5" max="12" step="0.5" value="5" />
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><label for="holdSlider">Hold duration</label><b id="holdValue">4.0s</b></div>
+        <input id="holdSlider" type="range" min="0" max="18" step="0.5" value="4" />
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><label for="exhaleSlider">Exhale duration</label><b id="exhaleValue">6.0s</b></div>
+        <input id="exhaleSlider" type="range" min="0.5" max="18" step="0.5" value="6" />
+      </div>
+      <button class="primary" id="startButton" type="button">Begin sessie</button>
     </div>
+  </section>
 
-    <!-- Post Session Summary -->
-    <div id="summary-modal" onclick="if (event.target.id === 'summary-modal') hideSummary()" 
-         class="hidden fixed inset-0 bg-black/90 z-[300] flex items-end justify-center">
-        <div onclick="event.stopImmediatePropagation()" 
-             class="bg-[#111111] w-full max-w-[420px] rounded-t-3xl p-6">
-            
-            <div class="text-center mb-6">
-                <div class="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mb-4">
-                    <i class="fa-solid fa-check text-4xl text-black"></i>
-                </div>
-                <div class="text-2xl font-semibold">Uitstekend gedaan.</div>
-                <div class="text-white/60 text-sm">Je hebt je zenuwstelsel gereset.</div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-white/5 rounded-3xl p-4 text-center">
-                    <div class="text-xs text-white/50">Hartslag gedaald</div>
-                    <div id="summary-hr-drop" class="text-4xl font-semibold text-emerald-400 tabular-nums">-14</div>
-                    <div class="text-xs text-white/50">bpm</div>
-                </div>
-                <div class="bg-white/5 rounded-3xl p-4 text-center">
-                    <div class="text-xs text-white/50">HRV verbetering</div>
-                    <div id="summary-hrv-gain" class="text-4xl font-semibold text-emerald-400 tabular-nums">+19</div>
-                    <div class="text-xs text-white/50">ms</div>
-                </div>
-            </div>
-            
-            <div class="text-xs text-center text-white/50 mb-5 px-4">
-                Geschatte GABA-ondersteuning: <span class="text-emerald-400 font-medium">Zeer hoog</span><br>
-                Je bent nu in diepe parasympathische staat.
-            </div>
-            
-            <button onclick="hideSummary()" 
-                    class="w-full py-4 bg-white text-black font-semibold rounded-3xl active:scale-[0.985] transition-transform">
-                TERUG NAAR DASHBOARD
-            </button>
-        </div>
+  <section class="sheet" id="settingsSheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="sheet-panel glass">
+      <div class="card-top">
+        <div class="glyph">⚙</div>
+        <button class="icon-button" id="closeSettingsSheet" aria-label="Sluiten" type="button">×</button>
+      </div>
+      <h2 id="settingsTitle">Instellingen</h2>
+      <p>Alle voorkeuren blijven lokaal op dit toestel. Geen accounts, geen tracking, geen cloud circus.</p>
+      <div class="settings-grid">
+        <div class="setting-row"><div><strong>Haptics</strong><small>Trilcue bij inhale, hold en exhale. Werkt alleen als de browser hardwaretrilling toestaat.</small></div><button class="switch" id="hapticToggle" aria-label="Haptics aan of uit" type="button"><i></i></button></div>
+        <div class="setting-row"><div><strong>Audio cues</strong><small>Zachte faseklanken via Web Audio, gesynchroniseerd met de fasegrens.</small></div><button class="switch" id="audioToggle" aria-label="Audio aan of uit" type="button"><i></i></button></div>
+        <div class="setting-row"><div><strong>High contrast</strong><small>Hardere randen en lichtere tekst voor betere leesbaarheid.</small></div><button class="switch" id="contrastToggle" aria-label="High contrast aan of uit" type="button"><i></i></button></div>
+        <div class="setting-row"><div><strong>Reduced motion</strong><small>Minder particles, geen overbodige ornamentiek, timing blijft exact.</small></div><button class="switch" id="motionToggle" aria-label="Reduced motion aan of uit" type="button"><i></i></button></div>
+      </div>
+      <button class="secondary" id="resetStatsButton" type="button" style="width:100%; margin-top:12px;">Reset lokale statistieken</button>
     </div>
+  </section>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Tailwind Config
-        function initTailwind() {
-            document.documentElement.style.setProperty('--accent', '#14b8a6');
-            
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        fontFamily: {
-                            'serif-premium': ['Playfair Display', 'Georgia', 'serif']
-                        }
-                    }
-                }
-            };
-        }
+  <section class="sheet" id="installSheet" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div class="sheet-panel glass">
+      <div class="card-top"><div class="glyph">⌂</div><button class="icon-button" id="closeInstallSheet" aria-label="Sluiten" type="button">×</button></div>
+      <h2 id="installTitle">Home screen klaar</h2>
+      <p id="installInstructions">Op iPhone: open deze pagina in Safari, tik op Delen, kies Zet op beginscherm. Daarna start PranaGuru zonder browser UI in standalone modus.</p>
+      <button class="primary" id="installOkButton" type="button">Begrepen</button>
+    </div>
+  </section>
 
-        // Global State
-        let currentLanguage = 'nl';
-        let currentExercise = null;
-        let sessionInterval = null;
-        let phaseInterval = null;
-        let isPaused = false;
-        let currentPhaseIndex = 0;
-        let totalElapsed = 0;
-        let sessionDuration = 660; // seconds
-        let soundEnabled = true;
-        let voiceEnabled = true;
-        let audioContext = null;
-        let currentSessionData = {};
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-        // 10 Guru Exercises Data
-        const exercises = [
-            {
-                id: 1,
-                name_nl: "Wim Hof Power Breathing",
-                name_en: "Wim Hof Power Breathing",
-                icon: "❄️",
-                tags: ["HRV", "Heart", "Advanced"],
-                default_duration: 11,
-                description_nl: "De meest krachtige ademtechniek voor het resetten van je zenuwstelsel en het verhogen van je stressbestendigheid. 30-40 krachtige ademhalingen gevolgd door een lange uitademing en hold.",
-                description_en: "The most powerful breathing technique to reset your nervous system and increase stress resilience. 30-40 powerful breaths followed by long exhale and hold.",
-                benefits_nl: ["Maximale HRV boost", "Hartslagcontrole", "Alkaline bloed", "Cold shock preparation"],
-                benefits_en: ["Maximum HRV boost", "Heart rate control", "Alkaline blood", "Cold exposure prep"],
-                mode: "wimhof",
-                rounds: 4,
-                breaths_per_round: 35,
-                hold_time: 90
+  <script>
+    (() => {
+      'use strict';
+
+      /* ==========================================================================
+         PranaGuru Elite PWA
+         Kernprincipes:
+         1. Geen setInterval voor sessietiming.
+         2. Een absolute monotone klok bepaalt phase, teller, progress en haptics.
+         3. requestAnimationFrame rendert alleen het beeld.
+         4. Service worker, manifest en icons staan los voor betrouwbare iOS PWA installatie.
+         ========================================================================== */
+
+      const $ = (id) => document.getElementById(id);
+      const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const ease = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const now = () => performance.now();
+      const fmt = (seconds) => {
+        const s = Math.max(0, Math.ceil(seconds));
+        const m = Math.floor(s / 60);
+        const r = String(s % 60).padStart(2, '0');
+        return `${m}:${r}`;
+      };
+      const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+      const PHASE = {
+        inhale: { key: 'inhale', nl: 'Inhale', color: '#22C55E', glow: 'rgba(34,197,94,.40)', haptic: [16] },
+        hold: { key: 'hold', nl: 'Hold', color: '#D4AF37', glow: 'rgba(212,175,55,.42)', haptic: [22, 30, 22] },
+        exhale: { key: 'exhale', nl: 'Exhale', color: '#38BDF8', glow: 'rgba(56,189,248,.38)', haptic: [28] },
+        empty: { key: 'empty', nl: 'Empty hold', color: '#A78BFA', glow: 'rgba(167,139,250,.36)', haptic: [12, 24, 12] },
+        pulse: { key: 'pulse', nl: 'Pulse', color: '#FB7185', glow: 'rgba(251,113,133,.36)', haptic: [9] }
+      };
+
+      /* Exercise configurations. Sliders adjust semantic phase groups per exercise, not a fake global speed multiplier. */
+      const EXERCISES = [
+        {
+          id: 'wimhof', name: 'Wim Hof Power Breathing', icon: '❄', visual: 'ice', duration: 11, default: { inhale: 1.1, hold: 75, exhale: 1.1 },
+          tags: ['Power', 'Rounds'], accent: 'rgba(56,189,248,.22)',
+          description: 'Krachtige cycli met diepe actieve inademing, ontspannen release, retentie op uitademing en korte recovery hold. Niet doen tijdens autorijden, zwemmen of staan.',
+          benefits: ['alertheid', 'stressbestendigheid', 'koude training', 'ademcapaciteit'],
+          guidance: {
+            beginner: {
+              inhale: 'Adem actief in door neus of mond, vul borst en buik zonder te forceren.',
+              exhale: 'Laat los zonder volledig leeg te duwen. Houd het ritme soepel.',
+              hold: 'Na de laatste uitademing: blijf leeg, ontspan kaak en schouders.',
+              empty: 'Neem een recovery adem in, houd kort vast, blijf zacht in het gezicht.'
             },
-            {
-                id: 2,
-                name_nl: "Nadi Shodhana (Alternate Nostril)",
-                name_en: "Nadi Shodhana (Alternate Nostril)",
-                icon: "🪔",
-                tags: ["GABA", "Balance", "Classic"],
-                default_duration: 11,
-                description_nl: "De koninklijke pranayama. Zuivert de nadis, balanceert linker- en rechterhersenhelft en activeert het parasympathische systeem op het hoogste niveau. Met exacte mudra timing.",
-                description_en: "The royal pranayama. Purifies the nadis, balances both brain hemispheres and activates the parasympathetic system at the highest level. With precise mudra timing.",
-                benefits_nl: ["Diepe GABA activatie", "Mentale helderheid", "Emotionele balans", "Beste voor HRV"],
-                benefits_en: ["Deep GABA activation", "Mental clarity", "Emotional balance", "Best for HRV"],
-                mode: "alternate",
-                phases: [
-                    { id: 'inhale_left', duration: 5, label_nl: 'Adem in linker neusgat', label_en: 'Inhale left nostril', visual: 'expand', nostril: 'left' },
-                    { id: 'hold', duration: 5, label_nl: 'Kumbhaka (vasthouden)', label_en: 'Kumbhaka (hold)', visual: 'hold' },
-                    { id: 'exhale_right', duration: 8, label_nl: 'Adem uit rechter neusgat', label_en: 'Exhale right nostril', visual: 'contract', nostril: 'right' },
-                    { id: 'hold_empty', duration: 3, label_nl: 'Leeg vasthouden', label_en: 'Empty hold', visual: 'hold_empty', nostril: 'right' },
-                    { id: 'inhale_right', duration: 5, label_nl: 'Adem in rechter neusgat', label_en: 'Inhale right nostril', visual: 'expand', nostril: 'right' },
-                    { id: 'hold2', duration: 5, label_nl: 'Kumbhaka', label_en: 'Kumbhaka', visual: 'hold' },
-                    { id: 'exhale_left', duration: 8, label_nl: 'Adem uit linker neusgat', label_en: 'Exhale left nostril', visual: 'contract', nostril: 'left' },
-                    { id: 'hold_empty2', duration: 3, label_nl: 'Leeg vasthouden', label_en: 'Empty hold', visual: 'hold_empty', nostril: 'left' }
-                ]
-            },
-            {
-                id: 3,
-                name_nl: "Physiological Sigh",
-                name_en: "Physiological Sigh",
-                icon: "🌬️",
-                tags: ["Heart", "Fast Calm", "Science"],
-                default_duration: 5,
-                description_nl: "De snelste manier om je hartslag te verlagen volgens Andrew Huberman. Dubbele inademing + lange uitademing. Gebruik dit als noodtechniek of dagelijks voor diepe ontspanning.",
-                description_en: "The fastest way to lower heart rate according to Andrew Huberman. Double inhale + long exhale. Use as emergency technique or daily for deep calm.",
-                benefits_nl: ["Hartslag -15 bpm in 30 sec", "Snelle stress reset", "Parasympathische dominantie", "Beste voor paniek"],
-                benefits_en: ["Heart rate -15 bpm in 30s", "Fast stress reset", "Parasympathetic dominance", "Best for panic"],
-                mode: "sigh",
-                phases: [
-                    { id: 'double_inhale', duration: 2.5, label_nl: 'Dubbele inademing (neus)', label_en: 'Double inhale (nose)', visual: 'expand' },
-                    { id: 'long_exhale', duration: 6, label_nl: 'Lange uitademing (mond)', label_en: 'Long exhale (mouth)', visual: 'contract' },
-                    { id: 'pause', duration: 2, label_nl: 'Natuurlijke pauze', label_en: 'Natural pause', visual: 'hold' }
-                ],
-                repeat: 8
-            },
-            {
-                id: 4,
-                name_nl: "Resonance Breathing 6 bpm",
-                name_en: "Resonance Breathing 6 bpm",
-                icon: "🌀",
-                tags: ["HRV", "GABA", "Optimal"],
-                default_duration: 11,
-                description_nl: "De meest wetenschappelijk gevalideerde ademhaling voor maximale HRV en GABA-productie. 5 seconden in, 5 seconden uit. Dit is de sweet spot van je zenuwstelsel.",
-                description_en: "The most scientifically validated breathing for maximum HRV and GABA production. 5 seconds in, 5 seconds out. This is the sweet spot of your nervous system.",
-                benefits_nl: ["Maximale HRV", "Diepe GABA boost", "Beste voor slaap", "Emotionele regulatie"],
-                benefits_en: ["Maximum HRV", "Deep GABA boost", "Best for sleep", "Emotional regulation"],
-                mode: "phase",
-                phases: [
-                    { id: 'inhale', duration: 5, label_nl: 'Adem langzaam in (buik)', label_en: 'Breathe slowly in (belly)', visual: 'expand' },
-                    { id: 'exhale', duration: 5, label_nl: 'Adem langzaam uit (buik)', label_en: 'Breathe slowly out (belly)', visual: 'contract' }
-                ]
-            },
-            {
-                id: 5,
-                name_nl: "Advanced Viloma Pranayama",
-                name_en: "Advanced Viloma Pranayama",
-                icon: "🕉️",
-                tags: ["Advanced", "Control", "Guru"],
-                default_duration: 8,
-                description_nl: "Guru-level interrupted breathing. Adem in in 3-4 stappen met pauzes, of uit in stappen. Ontwikkelt extreme controle over je adem en zenuwstelsel.",
-                description_en: "Guru-level interrupted breathing. Inhale in 3-4 steps with pauses, or exhale in steps. Develops extreme control over breath and nervous system.",
-                benefits_nl: ["Extreme ademcontrole", "Diepe concentratie", "Mentale stabiliteit", "Prana mastery"],
-                benefits_en: ["Extreme breath control", "Deep concentration", "Mental stability", "Prana mastery"],
-                mode: "phase",
-                phases: [
-                    { id: 'inhale1', duration: 2, label_nl: 'Inademing 1/3', label_en: 'Inhale 1/3', visual: 'expand' },
-                    { id: 'pause1', duration: 1.5, label_nl: 'Pauze', label_en: 'Pause', visual: 'hold' },
-                    { id: 'inhale2', duration: 2, label_nl: 'Inademing 2/3', label_en: 'Inhale 2/3', visual: 'expand' },
-                    { id: 'pause2', duration: 1.5, label_nl: 'Pauze', label_en: 'Pause', visual: 'hold' },
-                    { id: 'inhale3', duration: 3, label_nl: 'Volledige inademing', label_en: 'Full inhale', visual: 'expand' },
-                    { id: 'kumbhaka', duration: 8, label_nl: 'Lange Kumbhaka', label_en: 'Long Kumbhaka', visual: 'hold' },
-                    { id: 'exhale', duration: 8, label_nl: 'Langzame uitademing', label_en: 'Slow exhale', visual: 'contract' }
-                ]
-            },
-            {
-                id: 6,
-                name_nl: "Bhramari (Humming Bee)",
-                name_en: "Bhramari (Humming Bee Breath)",
-                icon: "🐝",
-                tags: ["GABA", "Brain", "Calm"],
-                default_duration: 8,
-                description_nl: "De bijenademhaling. Creëert een vibratie die direct GABA vrijmaakt in de hersenen. Een van de meest effectieve technieken voor angst, slapeloosheid en mentale helderheid.",
-                description_en: "The humming bee breath. Creates a vibration that directly releases GABA in the brain. One of the most effective techniques for anxiety, insomnia and mental clarity.",
-                benefits_nl: ["Directe GABA release", "Angst & stress reductie", "Beter slapen", "Tinnitus hulp"],
-                benefits_en: ["Direct GABA release", "Anxiety & stress reduction", "Better sleep", "Tinnitus relief"],
-                mode: "humming",
-                phases: [
-                    { id: 'inhale', duration: 4, label_nl: 'Diepe inademing', label_en: 'Deep inhale', visual: 'expand' },
-                    { id: 'humming', duration: 8, label_nl: 'Humming (Mmmmm...)', label_en: 'Humming (Mmmmm...)', visual: 'contract' }
-                ]
-            },
-            {
-                id: 7,
-                name_nl: "Kapalbhati + Bhastrika",
-                name_en: "Kapalbhati + Bhastrika",
-                icon: "🔥",
-                tags: ["Advanced", "Energy", "Detox"],
-                default_duration: 7,
-                description_nl: "De schedel glanzende + blaasbalg ademhaling. Krachtige reiniging van de longen, stimulatie van het zenuwstelsel en verhoging van prana. Alleen voor gevorderden.",
-                description_en: "Skull shining + bellows breath. Powerful lung cleansing, nervous system stimulation and prana increase. Advanced practitioners only.",
-                benefits_nl: ["Longreiniging", "Verhoogde alertheid", "Digestie boost", "Prana verhoging"],
-                benefits_en: ["Lung cleansing", "Increased alertness", "Digestion boost", "Prana increase"],
-                mode: "kapalbhati",
-                rounds: 3,
-                breaths_per_round: 60
-            },
-            {
-                id: 8,
-                name_nl: "Box Breathing 4-4-4-4",
-                name_en: "Box Breathing 4-4-4-4",
-                icon: "📦",
-                tags: ["Classic", "Focus", "Navy SEAL"],
-                default_duration: 6,
-                description_nl: "De ademhaling die Navy SEALs gebruiken. Perfecte balans van inademing, vasthouden, uitademing en leeg vasthouden. Uitstekend voor focus en emotionele regulatie.",
-                description_en: "The breathing used by Navy SEALs. Perfect balance of inhale, hold, exhale and empty hold. Excellent for focus and emotional regulation.",
-                benefits_nl: ["Diepe focus", "Emotionele controle", "Stressbestendigheid", "Prestaties"],
-                benefits_en: ["Deep focus", "Emotional control", "Stress resilience", "Performance"],
-                mode: "phase",
-                phases: [
-                    { id: 'inhale', duration: 4, label_nl: 'Adem in (4 sec)', label_en: 'Inhale (4 sec)', visual: 'expand' },
-                    { id: 'hold', duration: 4, label_nl: 'Vasthouden (4 sec)', label_en: 'Hold (4 sec)', visual: 'hold' },
-                    { id: 'exhale', duration: 4, label_nl: 'Adem uit (4 sec)', label_en: 'Exhale (4 sec)', visual: 'contract' },
-                    { id: 'hold_empty', duration: 4, label_nl: 'Leeg vasthouden (4 sec)', label_en: 'Empty hold (4 sec)', visual: 'hold_empty' }
-                ]
-            },
-            {
-                id: 9,
-                name_nl: "4-7-8 Ademhaling (Dr. Weil)",
-                name_en: "4-7-8 Breathing (Dr. Weil)",
-                icon: "🌙",
-                tags: ["Sleep", "Calm", "Classic"],
-                default_duration: 6,
-                description_nl: "De beroemde 4-7-8 techniek van Dr. Andrew Weil. Uitstekend voor inslapen en het activeren van het parasympathische systeem. Een van de meest effectieve voor slaap.",
-                description_en: "Dr. Andrew Weil's famous 4-7-8 technique. Excellent for falling asleep and activating the parasympathetic system. One of the most effective for sleep.",
-                benefits_nl: ["Snel in slaap vallen", "Diepe ontspanning", "Angst reductie", "Nachtrust optimalisatie"],
-                benefits_en: ["Fall asleep fast", "Deep relaxation", "Anxiety reduction", "Sleep optimization"],
-                mode: "phase",
-                phases: [
-                    { id: 'inhale', duration: 4, label_nl: 'Adem in (neus)', label_en: 'Inhale (nose)', visual: 'expand' },
-                    { id: 'hold', duration: 7, label_nl: 'Vasthouden', label_en: 'Hold', visual: 'hold' },
-                    { id: 'exhale', duration: 8, label_nl: 'Adem uit (mond, wiegend geluid)', label_en: 'Exhale (mouth, whoosh)', visual: 'contract' }
-                ]
-            },
-            {
-                id: 10,
-                name_nl: "Ujjayi met Kumbhaka",
-                name_en: "Ujjayi with Kumbhaka",
-                icon: "🌊",
-                tags: ["Ocean", "Advanced", "Yoga"],
-                default_duration: 9,
-                description_nl: "De oceaanademhaling met lange retentie. Creëert een interne warmte en diepe concentratie. Klassieke yogatechniek voor gevorderden met volledige kumbhaka.",
-                description_en: "Ocean breath with long retention. Creates internal heat and deep concentration. Classic yoga technique for advanced practitioners with full kumbhaka.",
-                benefits_nl: ["Interne warmte", "Diepe concentratie", "Prana opbouw", "Yoga mastery"],
-                benefits_en: ["Internal heat", "Deep concentration", "Prana building", "Yoga mastery"],
-                mode: "phase",
-                phases: [
-                    { id: 'inhale', duration: 6, label_nl: 'Ujjayi inademing (keel)', label_en: 'Ujjayi inhale (throat)', visual: 'expand' },
-                    { id: 'kumbhaka', duration: 12, label_nl: 'Lange Kumbhaka', label_en: 'Long Kumbhaka', visual: 'hold' },
-                    { id: 'exhale', duration: 8, label_nl: 'Ujjayi uitademing (keel)', label_en: 'Ujjayi exhale (throat)', visual: 'contract' },
-                    { id: 'hold_empty', duration: 4, label_nl: 'Leeg vasthouden', label_en: 'Empty hold', visual: 'hold_empty' }
-                ]
+            guru: {
+              inhale: 'Trek prana krachtig omhoog door middenlijn en ribkooi, zonder spanning in keel.',
+              exhale: 'Passieve release, geen controlekramp. Laat CO₂ zakken zonder ego-theater.',
+              hold: 'Bahya kumbhaka: aandacht in navelcentrum, zachte bandha, observeer impuls zonder strijd.',
+              empty: 'Recovery hold: subtiele mula bandha, kroon stil, ademvolume niet najagen.'
             }
-        ];
-
-        // Initialize everything
-        function initApp() {
-            initTailwind();
-            renderExercises();
-            loadUserData();
-            initAudio();
-            registerPWA();
-            
-            // Set initial language
-            setLanguage('nl', true);
-            
-            // Demo HR values (user can edit in settings later)
-            document.getElementById('resting-hr').textContent = '51';
-            document.getElementById('hrv-score').textContent = '92';
-            document.getElementById('gaba-score').textContent = '96';
-            
-            // Keyboard shortcuts hint
-            console.log('%c[PranaGuru] App ready. Press ? for shortcuts.', 'color:#14b8a6');
+          },
+          build(settings, total) {
+            const d = settings; const phases = []; let t = 0; let round = 1;
+            while (t < total + 8) {
+              for (let i = 1; i <= 30; i++) {
+                phases.push(phase('power_inhale', 'inhale', d.inhale, round, i, 'Krachtige inhale'));
+                phases.push(phase('power_release', 'exhale', d.exhale, round, i, 'Ontspannen release'));
+              }
+              phases.push(phase('retention', 'hold', d.hold, round, 30, 'Retentie leeg'));
+              phases.push(phase('recovery_inhale', 'inhale', Math.max(2, d.inhale * 2), round, 31, 'Recovery inhale'));
+              phases.push(phase('recovery_hold', 'empty', 15, round, 31, 'Recovery hold'));
+              phases.push(phase('recovery_exhale', 'exhale', 4, round, 31, 'Zachte exhale'));
+              t += (d.inhale + d.exhale) * 30 + d.hold + Math.max(2, d.inhale * 2) + 19;
+              round++;
+            }
+            return timeline(phases, total);
+          }
+        },
+        {
+          id: 'nadi', name: 'Nadi Shodhana', icon: '☯', visual: 'nostril', duration: 11, default: { inhale: 5, hold: 5, exhale: 8 },
+          tags: ['Balance', 'Nose'], accent: 'rgba(20,184,166,.22)',
+          description: 'Alternate nostril breathing met links rechts balans, rustige kumbhaka en duidelijke mudra cues.',
+          benefits: ['balans', 'focus', 'HRV', 'neusademhaling'],
+          guidance: {
+            beginner: {
+              inhale: 'Adem langzaam door één neusgat in. Houd schouders laag en buik zacht bewegend.',
+              hold: 'Sluit beide neusgaten zacht. Houd vast zonder druk in het hoofd.',
+              exhale: 'Open het andere neusgat en adem langer uit dan je inademde.',
+              empty: 'Korte lege pauze. Blijf ontspannen, wissel daarna rustig van kant.'
+            },
+            guru: {
+              inhale: 'Puraka via ida of pingala, aandacht langs de wervelkolom omhoog, mudra minimaal.',
+              hold: 'Antara kumbhaka, zachte jalandhara intentie, bindu stil, geen gezichtsdruk.',
+              exhale: 'Rechaka door het tegenoverliggende kanaal, langer en fijner dan de inhale.',
+              empty: 'Bahya stilte, nadi balans voelen zonder mechanische haast.'
+            }
+          },
+          build(settings, total) {
+            const d = settings;
+            return repeatTimeline([
+              phase('inhale_left', 'inhale', d.inhale, 1, 1, 'Inhale links', { nostril: 'left' }),
+              phase('hold_left', 'hold', d.hold, 1, 1, 'Hold beide', { nostril: 'both' }),
+              phase('exhale_right', 'exhale', d.exhale, 1, 1, 'Exhale rechts', { nostril: 'right' }),
+              phase('empty_right', 'empty', Math.min(3, Math.max(1, d.hold * .35)), 1, 1, 'Leeg rechts', { nostril: 'right' }),
+              phase('inhale_right', 'inhale', d.inhale, 1, 2, 'Inhale rechts', { nostril: 'right' }),
+              phase('hold_right', 'hold', d.hold, 1, 2, 'Hold beide', { nostril: 'both' }),
+              phase('exhale_left', 'exhale', d.exhale, 1, 2, 'Exhale links', { nostril: 'left' }),
+              phase('empty_left', 'empty', Math.min(3, Math.max(1, d.hold * .35)), 1, 2, 'Leeg links', { nostril: 'left' })
+            ], total);
+          }
+        },
+        {
+          id: 'sigh', name: 'Physiological Sigh', icon: '♒', visual: 'sigh', duration: 5, default: { inhale: 1.4, hold: .8, exhale: 6 },
+          tags: ['Fast Calm', 'Reset'], accent: 'rgba(34,197,94,.20)',
+          description: 'Dubbele neusinhale gevolgd door lange mondexhale. Snel, simpel en bruikbaar bij acute stress.',
+          benefits: ['snelle reset', 'lange exhale', 'kalmering', 'simpel'],
+          guidance: {
+            beginner: {
+              inhale: 'Neem een inademing door de neus. Vul ongeveer tachtig procent.',
+              hold: 'Neem een tweede kleine top-inhale. Alsof je de longen zacht bijvult.',
+              exhale: 'Adem lang uit door de mond. Laat ribben, buik en gezicht zakken.',
+              empty: 'Laat een natuurlijke pauze vallen. Niet duwen, alleen wachten.'
+            },
+            guru: {
+              inhale: 'Eerste puraka opent alveoli, neus rustig, buik initieert.',
+              hold: 'Tweede sip-inhale bovenop de eerste, minimale nekspanning.',
+              exhale: 'Lange vagale rechaka door mond, ribboog daalt, aandacht in hartgebied.',
+              empty: 'Natuurlijke kevala glimp, geen wilskracht toevoegen.'
+            }
+          },
+          build(settings, total) {
+            const d = settings;
+            return repeatTimeline([
+              phase('first_inhale', 'inhale', d.inhale, 1, 1, 'Eerste inhale'),
+              phase('top_inhale', 'hold', Math.max(.5, d.hold), 1, 1, 'Top inhale'),
+              phase('long_exhale', 'exhale', d.exhale, 1, 1, 'Lange exhale'),
+              phase('natural_pause', 'empty', 1.5, 1, 1, 'Natuurlijke pauze')
+            ], total);
+          }
+        },
+        {
+          id: 'resonance', name: 'Resonance 6 BPM', icon: '≈', visual: 'resonance', duration: 10, default: { inhale: 5, hold: 0, exhale: 5 },
+          tags: ['HRV', 'Sleep'], accent: 'rgba(20,184,166,.20)',
+          description: 'Vijf seconden in, vijf seconden uit. Een rustige metronoom voor HRV training en slaapvoorbereiding.',
+          benefits: ['HRV', 'emotieregulatie', 'slaap', 'consistentie'],
+          guidance: {
+            beginner: {
+              inhale: 'Adem vijf tellen door de neus in. Buik beweegt eerst, borst volgt pas later.',
+              hold: 'Geen vasthouden nodig. Laat de overgang vloeiend zijn.',
+              exhale: 'Adem vijf tellen rustig uit door de neus. Houd de keel open.',
+              empty: 'Korte stilte als die vanzelf ontstaat.'
+            },
+            guru: {
+              inhale: 'Coherent puraka, diafragma laag, aandacht op hartvariabiliteit.',
+              hold: 'Microkumbhaka alleen als het vanzelf verschijnt.',
+              exhale: 'Coherent rechaka, parasympathische toon, geen volume jagen.',
+              empty: 'Nulpunt tussen golven, laat het autonoom worden.'
+            }
+          },
+          build(settings, total) {
+            const d = settings;
+            const base = [phase('inhale', 'inhale', d.inhale, 1, 1, 'Coherent inhale')];
+            if (d.hold > 0) base.push(phase('soft_hold', 'hold', d.hold, 1, 1, 'Zachte hold'));
+            base.push(phase('exhale', 'exhale', d.exhale, 1, 1, 'Coherent exhale'));
+            return repeatTimeline(base, total);
+          }
+        },
+        {
+          id: 'viloma', name: 'Advanced Viloma', icon: '▤', visual: 'viloma', duration: 8, default: { inhale: 2, hold: 4, exhale: 7 },
+          tags: ['Control', 'Steps'], accent: 'rgba(212,175,55,.22)',
+          description: 'Onderbroken inademing met micro pauzes, daarna kumbhaka en lange uitademing. Controle zonder hardheid.',
+          benefits: ['controle', 'concentratie', 'stabiliteit', 'subtiliteit'],
+          guidance: {
+            beginner: {
+              inhale: 'Adem in segmenten in. Stop kort na elk deel, alsof je een lamp dimt per trede.',
+              hold: 'Houd vol maar zacht. Als spanning stijgt, verlaag de hold slider.',
+              exhale: 'Adem rustig in één lange stroom uit. Maak de uitademing stiller dan nodig.',
+              empty: 'Korte lege rust. Laat de buik vanzelf terugkomen.'
+            },
+            guru: {
+              inhale: 'Viloma puraka in drie treden, prana stapelt zonder borstpantser.',
+              hold: 'Antara kumbhaka, drishti intern, bandha slechts als suggestie.',
+              exhale: 'Ononderbroken rechaka, fijn en lang, energie zakt naar bekkenbodem.',
+              empty: 'Subtiele bahya pauze, geen prestatiehouding.'
+            }
+          },
+          build(settings, total) {
+            const d = settings; const pause = Math.min(1.8, Math.max(.7, d.hold * .25));
+            return repeatTimeline([
+              phase('step_1', 'inhale', d.inhale, 1, 1, 'Inhale stap 1'),
+              phase('pause_1', 'hold', pause, 1, 1, 'Micro pauze'),
+              phase('step_2', 'inhale', d.inhale, 1, 2, 'Inhale stap 2'),
+              phase('pause_2', 'hold', pause, 1, 2, 'Micro pauze'),
+              phase('step_3', 'inhale', d.inhale * 1.2, 1, 3, 'Inhale stap 3'),
+              phase('kumbhaka', 'hold', d.hold, 1, 3, 'Kumbhaka'),
+              phase('exhale', 'exhale', d.exhale, 1, 3, 'Lange exhale')
+            ], total);
+          }
+        },
+        {
+          id: 'bhramari', name: 'Bhramari Bee Breath', icon: '◌', visual: 'bhramari', duration: 8, default: { inhale: 4, hold: 0, exhale: 8 },
+          tags: ['Hum', 'Calm'], accent: 'rgba(167,139,250,.22)',
+          description: 'Diepe inademing, daarna zoemende uitademing met gesloten lippen. Zacht volume, lage trilling.',
+          benefits: ['rust', 'vibratie', 'slaap', 'focus'],
+          guidance: {
+            beginner: {
+              inhale: 'Adem door de neus in. Ontspan tong, kaken en ogen.',
+              hold: 'Geen hold nodig. Draai rustig naar de zoem uitademing.',
+              exhale: 'Zoem laag en zacht: mmmmm. Voel de trilling in gezicht en borst.',
+              empty: 'Laat stilte volgen. Merk het verschil na de trilling.'
+            },
+            guru: {
+              inhale: 'Puraka door neus, aandacht naar bhrumadhya, tong breed en stil.',
+              hold: 'Micro stilte voor nada. Geen keelspanning.',
+              exhale: 'Bhramari nada, lage resonantie, schedel wordt klankkast.',
+              empty: 'Luister naar de nasound. Minder doen, scherper waarnemen.'
+            }
+          },
+          build(settings, total) {
+            const d = settings; const base = [phase('inhale', 'inhale', d.inhale, 1, 1, 'Diepe inhale')];
+            if (d.hold > 0) base.push(phase('soft_hold', 'hold', d.hold, 1, 1, 'Zachte hold'));
+            base.push(phase('hum', 'exhale', d.exhale, 1, 1, 'Hummende exhale'));
+            return repeatTimeline(base, total);
+          }
+        },
+        {
+          id: 'kapal', name: 'Kapalbhati + Bhastrika', icon: '▲', visual: 'kapal', duration: 6, default: { inhale: .55, hold: 12, exhale: .55 },
+          tags: ['Fire', 'Advanced'], accent: 'rgba(251,113,133,.22)',
+          description: 'Snelle actieve pompadem. Alleen zittend, nooit forceren, stop bij duizeligheid of druk in hoofd.',
+          benefits: ['energie', 'warmte', 'alertheid', 'diafragma'],
+          guidance: {
+            beginner: {
+              inhale: 'Laat de inademing terugveren. Buik komt vanzelf naar voren.',
+              hold: 'Rust na de ronde. Adem normaal als druk stijgt.',
+              exhale: 'Trek buik kort naar binnen voor een actieve uitademing.',
+              empty: 'Blijf zitten, voel na, begin pas als alles stabiel is.'
+            },
+            guru: {
+              inhale: 'Bhastrika rebound, diafragma elastisch, borst niet pompen.',
+              hold: 'Antara stabilisatie na ronde, bandha mild, geen schedeldruk.',
+              exhale: 'Kapalbhati kriya, scherpe navelactie, exhale actief, inhale passief.',
+              empty: 'Na-effect observeren, vuur zonder agressie.'
+            }
+          },
+          build(settings, total) {
+            const d = settings; const phases = []; let t = 0; let round = 1;
+            while (t < total + 5) {
+              for (let i = 1; i <= 36; i++) {
+                phases.push(phase('rebound_inhale', 'inhale', d.inhale, round, i, 'Rebound inhale'));
+                phases.push(phase('sharp_exhale', 'pulse', d.exhale, round, i, 'Actieve exhale'));
+              }
+              phases.push(phase('round_hold', 'hold', d.hold, round, 36, 'Na-ronde hold'));
+              phases.push(phase('settle', 'empty', 8, round, 36, 'Navoelen'));
+              t += (d.inhale + d.exhale) * 36 + d.hold + 8;
+              round++;
+            }
+            return timeline(phases, total);
+          }
+        },
+        {
+          id: 'box', name: 'Box Breathing 4-4-4-4', icon: '□', visual: 'box', duration: 6, default: { inhale: 4, hold: 4, exhale: 4 },
+          tags: ['Focus', 'Square'], accent: 'rgba(246,234,209,.18)',
+          description: 'Vier gelijke zijden: in, vasthouden, uit, leeg vasthouden. Strak, helder, betrouwbaar.',
+          benefits: ['focus', 'controle', 'stress', 'simpel'],
+          guidance: {
+            beginner: {
+              inhale: 'Adem vier tellen in door de neus. Laat de buik rustig uitzetten.',
+              hold: 'Houd vier tellen vast. Geen extra lucht nemen.',
+              exhale: 'Adem vier tellen uit. Laat de schouders zakken.',
+              empty: 'Blijf vier tellen leeg. Ontspan de buik, start dan opnieuw.'
+            },
+            guru: {
+              inhale: 'Puraka langs de eerste zijde van het vierkant, aandacht stabiel.',
+              hold: 'Antara kumbhaka, geometrische rust, blik intern.',
+              exhale: 'Rechaka langs de dalende zijde, gelijkmatig tot nul.',
+              empty: 'Bahya kumbhaka, vierde zijde, stilte zonder compressie.'
+            }
+          },
+          build(settings, total) {
+            const d = settings;
+            return repeatTimeline([
+              phase('inhale', 'inhale', d.inhale, 1, 1, 'Inhale'),
+              phase('hold_full', 'hold', d.hold, 1, 1, 'Hold'),
+              phase('exhale', 'exhale', d.exhale, 1, 1, 'Exhale'),
+              phase('hold_empty', 'empty', d.hold, 1, 1, 'Empty hold')
+            ], total);
+          }
+        },
+        {
+          id: '478', name: '4-7-8 Breathing', icon: '☾', visual: 'sleep', duration: 6, default: { inhale: 4, hold: 7, exhale: 8 },
+          tags: ['Sleep', 'Classic'], accent: 'rgba(56,189,248,.20)',
+          description: 'Klassieke 4-7-8 techniek: neus in, vasthouden, lange mond uit. Geschikt voor slaapritueel.',
+          benefits: ['slaap', 'rust', 'lange exhale', 'ritueel'],
+          guidance: {
+            beginner: {
+              inhale: 'Adem vier seconden in door de neus. Stil en zonder haast.',
+              hold: 'Houd zeven seconden vast. Verlaag de slider als het hard wordt.',
+              exhale: 'Adem acht seconden uit door de mond, zacht whoosh geluid mag.',
+              empty: 'Laat de volgende adem vanzelf beginnen.'
+            },
+            guru: {
+              inhale: 'Vier tellen puraka, tongpunt licht achter boventanden.',
+              hold: 'Zeven tellen antara kumbhaka, hartgebied ruim, ogen zacht.',
+              exhale: 'Acht tellen rechaka door mond, vagale daling, lichaam zwaarder.',
+              empty: 'Korte overgang zonder inhaledrang te dramatiseren.'
+            }
+          },
+          build(settings, total) {
+            const d = settings;
+            return repeatTimeline([
+              phase('inhale', 'inhale', d.inhale, 1, 1, '4 inhale'),
+              phase('hold', 'hold', d.hold, 1, 1, '7 hold'),
+              phase('exhale', 'exhale', d.exhale, 1, 1, '8 exhale')
+            ], total);
+          }
+        },
+        {
+          id: 'ujjayi', name: 'Ujjayi with Kumbhaka', icon: '≋', visual: 'ocean', duration: 9, default: { inhale: 6, hold: 10, exhale: 8 },
+          tags: ['Ocean', 'Yoga'], accent: 'rgba(20,184,166,.18)',
+          description: 'Oceaanadem met zachte keelvernauwing, langere retentie en gecontroleerde uitademing.',
+          benefits: ['warmte', 'concentratie', 'yoga', 'subtiele controle'],
+          guidance: {
+            beginner: {
+              inhale: 'Adem door de neus in met zacht oceaangeluid in de keel. Niet knijpen.',
+              hold: 'Houd vast met ontspannen gezicht. Laat de borst breed blijven.',
+              exhale: 'Adem uit met hetzelfde zachte keelgeluid, langer dan de inhale.',
+              empty: 'Korte lege pauze. Blijf stil in keel en kaken.'
+            },
+            guru: {
+              inhale: 'Ujjayi puraka, glottis subtiel, warmte bouwt achter sternum.',
+              hold: 'Antara kumbhaka, prana samana, bandha alleen als precisie aanwezig is.',
+              exhale: 'Ujjayi rechaka, oceaan naar beneden, aandacht in sushumna.',
+              empty: 'Bahya rust, keel open genoeg om geen druk te maken.'
+            }
+          },
+          build(settings, total) {
+            const d = settings;
+            return repeatTimeline([
+              phase('ujjayi_inhale', 'inhale', d.inhale, 1, 1, 'Ujjayi inhale'),
+              phase('kumbhaka', 'hold', d.hold, 1, 1, 'Kumbhaka'),
+              phase('ujjayi_exhale', 'exhale', d.exhale, 1, 1, 'Ujjayi exhale'),
+              phase('empty_hold', 'empty', Math.min(5, Math.max(1, d.hold * .35)), 1, 1, 'Lege hold')
+            ], total);
+          }
         }
+      ];
 
-        function loadUserData() {
-            const streak = localStorage.getItem('prana_streak') || 47;
-            document.getElementById('streak-count').textContent = streak;
-            
-            // Load last stats if exist
-            const lastHR = localStorage.getItem('last_resting_hr');
-            if (lastHR) document.getElementById('resting-hr').textContent = lastHR;
+      function phase(id, type, duration, round, breath, label, meta = {}) {
+        return { id, type, duration: Math.max(0.05, Number(duration)), round, breath, label, meta };
+      }
+
+      function timeline(phases, totalDuration) {
+        const out = []; let cursor = 0;
+        for (const p of phases) {
+          if (cursor >= totalDuration) break;
+          const duration = Math.min(p.duration, totalDuration - cursor);
+          out.push({ ...p, duration, start: cursor, end: cursor + duration });
+          cursor += duration;
         }
+        return out;
+      }
 
-        function saveStreak() {
-            let streak = parseInt(localStorage.getItem('prana_streak') || 47) + 1;
-            localStorage.setItem('prana_streak', streak);
-            document.getElementById('streak-count').textContent = streak;
+      function repeatTimeline(base, totalDuration) {
+        const phases = []; let cursor = 0; let round = 1;
+        while (cursor < totalDuration + 1) {
+          for (const p of base) {
+            phases.push({ ...p, round, start: 0, end: 0 });
+            cursor += p.duration;
+          }
+          round++;
         }
+        return timeline(phases, totalDuration);
+      }
 
-        function renderExercises() {
-            const grid = document.getElementById('exercises-grid');
-            grid.innerHTML = '';
-            
-            exercises.forEach(ex => {
-                const card = document.createElement('div');
-                card.className = `exercise-card bg-white/5 border border-white/10 hover:border-teal-500/50 rounded-3xl p-4 cursor-pointer active:scale-[0.985] transition-all`;
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-4xl">${ex.icon}</div>
-                        <div class="flex gap-1">
-                            ${ex.tags.map(tag => `
-                                <div class="text-[9px] px-2 py-0.5 bg-white/10 rounded-2xl text-white/60">${tag}</div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    <div class="font-semibold text-[15px] leading-tight tracking-tight mb-2 pr-2">${ex.name_nl}</div>
-                    
-                    <div class="flex items-center justify-between text-xs">
-                        <div class="text-white/50">${ex.default_duration} min</div>
-                        <div class="flex items-center text-teal-400">
-                            <span class="text-[10px]">START</span>
-                            <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
-                        </div>
-                    </div>
-                `;
-                
-                card.onclick = () => showExerciseDetail(ex.id);
-                grid.appendChild(card);
+      const Store = {
+        key: 'pranaguru.elite.v2',
+        data: {
+          settings: { haptics: true, audio: true, contrast: false, reducedMotion: false, mode: 'beginner' },
+          seenOnboarding: false,
+          stats: { streak: 0, minutes: 0, sessions: 0, lastDay: '' },
+          custom: {}
+        },
+        load() {
+          try {
+            const raw = localStorage.getItem(this.key);
+            if (raw) this.data = mergeDeep(this.data, JSON.parse(raw));
+          } catch (e) { console.warn('Storage load failed', e); }
+          this.applyA11y();
+        },
+        save() { localStorage.setItem(this.key, JSON.stringify(this.data)); },
+        applyA11y() {
+          document.documentElement.classList.toggle('a11y-high-contrast', !!this.data.settings.contrast);
+          document.documentElement.classList.toggle('reduced-motion', !!this.data.settings.reducedMotion);
+        },
+        customFor(ex) { return this.data.custom[ex.id] || { ...ex.default, duration: ex.duration }; },
+        setCustom(ex, values) { this.data.custom[ex.id] = { ...this.customFor(ex), ...values }; this.save(); }
+      };
+
+      function mergeDeep(a, b) {
+        const out = { ...a };
+        for (const [k, v] of Object.entries(b || {})) out[k] = v && typeof v === 'object' && !Array.isArray(v) ? mergeDeep(a[k] || {}, v) : v;
+        return out;
+      }
+
+      const App = {
+        selected: null,
+        deferredPrompt: null,
+        init() {
+          this.setViewportHeight();
+          window.addEventListener('resize', () => this.setViewportHeight(), { passive: true });
+          Store.load();
+          this.renderHome();
+          this.bindUI();
+          this.openFromHash();
+          this.initInstall();
+          this.registerServiceWorker();
+          if (!Store.data.seenOnboarding) this.openSheet('onboardingSheet');
+          Visual.init();
+          Engine.init();
+          this.toast('PranaGuru klaar. Kies een techniek.');
+        },
+        setViewportHeight() { document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`); },
+        bindUI() {
+          $('settingsButton').addEventListener('click', () => this.openSettings());
+          $('sessionSettingsButton').addEventListener('click', () => this.openSettings());
+          $('canvasSettingsButton').addEventListener('click', () => this.openSettings());
+          $('closeOnboardingSheet').addEventListener('click', () => this.finishOnboarding());
+          $('startOnboardingButton').addEventListener('click', () => this.finishOnboarding());
+          $('closeSettingsSheet').addEventListener('click', () => this.closeSheet('settingsSheet'));
+          $('closeExerciseSheet').addEventListener('click', () => this.closeSheet('exerciseSheet'));
+          $('exitSessionButton').addEventListener('click', () => Engine.stop(true));
+          $('pauseButton').addEventListener('click', () => Engine.togglePause());
+          $('nextPhaseButton').addEventListener('click', () => Engine.jumpPhase(1));
+          $('backPhaseButton').addEventListener('click', () => Engine.jumpPhase(-1));
+          $('startButton').addEventListener('click', () => this.startSelected());
+          $('beginnerModeButton').addEventListener('click', () => this.setMode('beginner'));
+          $('guruModeButton').addEventListener('click', () => this.setMode('guru'));
+          $('installButton').addEventListener('click', () => this.showInstallFlow());
+          $('closeInstallSheet').addEventListener('click', () => this.closeSheet('installSheet'));
+          $('installOkButton').addEventListener('click', () => this.closeSheet('installSheet'));
+          $('resetStatsButton').addEventListener('click', () => { Store.data.stats = { streak: 0, minutes: 0, sessions: 0, lastDay: '' }; Store.save(); this.renderStats(); this.toast('Lokale statistieken gereset.'); });
+          for (const [id, key] of [['hapticToggle','haptics'], ['audioToggle','audio'], ['contrastToggle','contrast'], ['motionToggle','reducedMotion']]) {
+            $(id).addEventListener('click', () => {
+              Store.data.settings[key] = !Store.data.settings[key]; Store.save(); Store.applyA11y(); this.renderSettings(); Visual.setQuality();
             });
+          }
+          for (const id of ['durationSlider', 'inhaleSlider', 'holdSlider', 'exhaleSlider']) $(id).addEventListener('input', () => this.syncSheetSliders());
+          for (const id of ['liveInhale', 'liveHold', 'liveExhale']) $(id).addEventListener('input', () => Engine.updateLiveSettings());
+          document.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Escape') { this.closeSheet('exerciseSheet'); this.closeSheet('settingsSheet'); this.closeSheet('installSheet'); this.closeSheet('onboardingSheet'); }
+            if (ev.key === ' ' && $('sessionScreen').classList.contains('active')) { ev.preventDefault(); Engine.togglePause(); }
+            if (ev.key === 'ArrowRight' && $('sessionScreen').classList.contains('active')) Engine.jumpPhase(1);
+            if (ev.key === 'ArrowLeft' && $('sessionScreen').classList.contains('active')) Engine.jumpPhase(-1);
+          });
+          document.addEventListener('visibilitychange', () => Visual.visible = !document.hidden);
+        },
+        openFromHash() {
+          const id = window.location.hash.replace('#', '');
+          const ex = EXERCISES.find(item => item.id === id);
+          if (ex) requestAnimationFrame(() => this.openExercise(ex));
+        },
+        renderHome() {
+          this.renderStats();
+          const grid = $('exerciseGrid'); grid.innerHTML = '';
+          EXERCISES.forEach((ex, idx) => {
+            const button = document.createElement('button');
+            button.type = 'button'; button.className = 'card'; button.style.setProperty('--cardGlow', ex.accent);
+            button.setAttribute('aria-label', `${ex.name} starten`);
+            button.innerHTML = `<div class="card-top"><div class="glyph">${ex.icon}</div><div class="tag">${ex.tags[0]}</div></div><h3>${idx + 1}. ${ex.name}</h3><p>${ex.description}</p>`;
+            button.addEventListener('click', () => this.openExercise(ex));
+            grid.appendChild(button);
+          });
+          $('standaloneBadge').textContent = isStandalone() ? 'standalone PWA actief' : 'home-screen-ready PWA';
+        },
+        renderStats() {
+          $('streakValue').textContent = Store.data.stats.streak;
+          $('minutesValue').textContent = Math.round(Store.data.stats.minutes);
+          $('sessionsValue').textContent = Store.data.stats.sessions;
+        },
+        openExercise(ex) {
+          this.selected = ex;
+          const custom = Store.customFor(ex);
+          $('sheetGlyph').textContent = ex.icon;
+          $('sheetTitle').textContent = ex.name;
+          $('sheetDescription').textContent = ex.description;
+          $('sheetBenefits').innerHTML = ex.benefits.map(b => `<span class="benefit">${b}</span>`).join('');
+          $('durationSlider').value = custom.duration || ex.duration;
+          $('inhaleSlider').value = custom.inhale;
+          $('holdSlider').value = custom.hold;
+          $('exhaleSlider').value = custom.exhale;
+          this.renderModeButtons(); this.syncSheetSliders(); this.openSheet('exerciseSheet');
+        },
+        syncSheetSliders() {
+          if (!this.selected) return;
+          const values = {
+            duration: Number($('durationSlider').value), inhale: Number($('inhaleSlider').value), hold: Number($('holdSlider').value), exhale: Number($('exhaleSlider').value)
+          };
+          $('durationValue').textContent = `${values.duration} min`;
+          $('inhaleValue').textContent = `${values.inhale.toFixed(1)}s`;
+          $('holdValue').textContent = `${values.hold.toFixed(1)}s`;
+          $('exhaleValue').textContent = `${values.exhale.toFixed(1)}s`;
+          Store.setCustom(this.selected, values);
+        },
+        setMode(mode) { Store.data.settings.mode = mode; Store.save(); this.renderModeButtons(); if (Engine.active) Engine.refreshGuidance(); },
+        renderModeButtons() {
+          $('beginnerModeButton').classList.toggle('active', Store.data.settings.mode === 'beginner');
+          $('guruModeButton').classList.toggle('active', Store.data.settings.mode === 'guru');
+        },
+        startSelected() {
+          if (!this.selected) return;
+          this.syncSheetSliders();
+          const settings = Store.customFor(this.selected);
+          this.closeSheet('exerciseSheet');
+          this.showScreen('sessionScreen');
+          Engine.start(this.selected, settings);
+        },
+        showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); },
+        openSettings() { this.renderSettings(); this.openSheet('settingsSheet'); },
+        renderSettings() {
+          for (const [id, key] of [['hapticToggle','haptics'], ['audioToggle','audio'], ['contrastToggle','contrast'], ['motionToggle','reducedMotion']]) $(id).classList.toggle('on', !!Store.data.settings[key]);
+        },
+        openSheet(id) { $(id).classList.add('active'); },
+        closeSheet(id) { $(id).classList.remove('active'); },
+        initInstall() {
+          const card = $('installCard');
+          if (!isStandalone()) card.classList.add('active');
+          window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); this.deferredPrompt = e; $('installText').textContent = 'Deze browser kan een directe installatieprompt tonen.'; card.classList.add('active'); });
+          window.addEventListener('appinstalled', () => { card.classList.remove('active'); this.toast('PranaGuru is geïnstalleerd.'); });
+        },
+        async showInstallFlow() {
+          if (this.deferredPrompt) {
+            this.deferredPrompt.prompt();
+            await this.deferredPrompt.userChoice.catch(() => null);
+            this.deferredPrompt = null;
+          } else {
+            $('installInstructions').textContent = isIOS()
+              ? 'Op iPhone: open in Safari, tik op Delen, kies Zet op beginscherm. Safari toont geen betrouwbare native beforeinstallprompt, deze custom flow is de correcte iOS route.'
+              : 'Gebruik het install icoon in de adresbalk of het browser menu om deze PWA te installeren.';
+            this.openSheet('installSheet');
+          }
+        },
+        async registerServiceWorker() {
+          if (!('serviceWorker' in navigator)) return;
+          try {
+            const reg = await navigator.serviceWorker.register('sw.js', { scope: './' });
+            reg.addEventListener('updatefound', () => this.toast('Offline cache wordt bijgewerkt.'));
+          } catch (e) { console.warn('Service worker registration failed', e); }
+        },
+        finishOnboarding() { Store.data.seenOnboarding = true; Store.save(); this.closeSheet('onboardingSheet'); },
+        completeSession(minutes) {
+          const today = new Date().toISOString().slice(0, 10);
+          if (Store.data.stats.lastDay !== today) { Store.data.stats.streak += 1; Store.data.stats.lastDay = today; }
+          Store.data.stats.minutes += minutes; Store.data.stats.sessions += 1; Store.save(); this.renderStats();
+        },
+        toast(message) {
+          const t = $('toast'); t.textContent = message; t.classList.add('active');
+          clearTimeout(this.toastTimer); this.toastTimer = setTimeout(() => t.classList.remove('active'), 2600);
         }
+      };
 
-        let selectedExerciseForModal = null;
-
-        function showExerciseDetail(id) {
-            const ex = exercises.find(e => e.id === id);
-            if (!ex) return;
-            
-            selectedExerciseForModal = ex;
-            
-            document.getElementById('modal-icon').innerHTML = ex.icon;
-            document.getElementById('modal-name').textContent = currentLanguage === 'nl' ? ex.name_nl : ex.name_en;
-            document.getElementById('modal-description').innerHTML = currentLanguage === 'nl' ? ex.description_nl : ex.description_en;
-            
-            // Tags
-            const tagsContainer = document.getElementById('modal-tags');
-            tagsContainer.innerHTML = ex.tags.map(tag => 
-                `<div class="text-xs px-3 py-1 bg-white/10 rounded-2xl">${tag}</div>`
-            ).join('');
-            
-            // Benefits
-            const benefitsContainer = document.getElementById('modal-benefits');
-            const benefits = currentLanguage === 'nl' ? ex.benefits_nl : ex.benefits_en;
-            benefitsContainer.innerHTML = benefits.map(b => 
-                `<div class="text-xs bg-emerald-500/10 text-emerald-300 px-3 py-1 rounded-2xl">${b}</div>`
-            ).join('');
-            
-            // Duration buttons
-            const durContainer = document.getElementById('duration-buttons');
-            durContainer.innerHTML = '';
-            
-            const durations = [3, 5, 8, 11, 15, 20];
-            durations.forEach(d => {
-                const btn = document.createElement('button');
-                btn.className = `px-5 py-2 text-sm rounded-2xl transition-all border ${d === ex.default_duration ? 'bg-teal-500 border-teal-500 text-black font-semibold' : 'bg-white/5 border-white/20 hover:bg-white/10'}`;
-                btn.textContent = `${d} min`;
-                btn.onclick = () => {
-                    // Deselect others
-                    durContainer.querySelectorAll('button').forEach(b => {
-                        b.classList.remove('bg-teal-500', 'border-teal-500', 'text-black', 'font-semibold');
-                        b.classList.add('bg-white/5', 'border-white/20');
-                    });
-                    btn.classList.add('bg-teal-500', 'border-teal-500', 'text-black', 'font-semibold');
-                    btn.classList.remove('bg-white/5', 'border-white/20');
-                    
-                    // Store selected duration
-                    selectedExerciseForModal.selectedDuration = d;
-                };
-                durContainer.appendChild(btn);
-            });
-            
-            // Show modal
-            document.getElementById('detail-modal').classList.remove('hidden');
-            document.getElementById('detail-modal').classList.add('flex');
+      const Haptics = {
+        fire(type) {
+          if (!Store.data.settings.haptics || !('vibrate' in navigator)) return;
+          const pattern = (PHASE[type] || PHASE.inhale).haptic;
+          try { navigator.vibrate(pattern); } catch (_) {}
         }
+      };
 
-        function hideDetailModal() {
-            const modal = document.getElementById('detail-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+      const AudioKit = {
+        ctx: null, drone: null,
+        ensure() {
+          if (!Store.data.settings.audio) return null;
+          if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+          if (this.ctx.state === 'suspended') this.ctx.resume();
+          return this.ctx;
+        },
+        phase(type) {
+          const ctx = this.ensure(); if (!ctx) return;
+          const map = { inhale: 432, hold: 528, exhale: 396, empty: 333, pulse: 660 };
+          const osc = ctx.createOscillator(); const gain = ctx.createGain();
+          osc.type = type === 'pulse' ? 'triangle' : 'sine'; osc.frequency.value = map[type] || 432;
+          gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(type === 'pulse' ? 0.04 : 0.028, ctx.currentTime + .02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (type === 'pulse' ? .12 : .42));
+          osc.connect(gain).connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + .48);
+        },
+        stop() { try { if (this.ctx) this.ctx.suspend(); } catch (_) {} }
+      };
+
+      const Engine = {
+        active: false, paused: false, ex: null, settings: null, plan: [], idx: 0, startAt: 0, pauseStarted: 0, pauseTotal: 0, total: 0, lastSecond: null, raf: 0,
+        init() {},
+        start(ex, settings) {
+          this.stop(false);
+          this.active = true; this.paused = false; this.ex = ex; this.settings = { ...settings }; this.total = Number(settings.duration) * 60;
+          this.plan = ex.build(this.settings, this.total); this.idx = 0; this.startAt = now(); this.pauseTotal = 0; this.lastSecond = null;
+          $('sessionName').textContent = ex.name;
+          $('sessionMeta').textContent = `${settings.duration} min • ${Store.data.settings.mode}`;
+          this.syncLiveSliders(); Visual.configure(ex); this.enterPhase(this.plan[0]); this.tick();
+        },
+        stop(returnHome) {
+          if (this.raf) cancelAnimationFrame(this.raf);
+          this.raf = 0;
+          if (this.active && returnHome) App.completeSession((this.elapsed() || 0) / 60);
+          this.active = false; this.paused = false;
+          AudioKit.stop();
+          if (returnHome) { App.showScreen('homeScreen'); App.toast('Sessie afgerond.'); }
+        },
+        elapsed() { return this.active ? clamp((now() - this.startAt - this.pauseTotal) / 1000, 0, this.total) : 0; },
+        tick() {
+          if (!this.active) return;
+          const elapsed = this.elapsed();
+          if (!this.paused) {
+            if (elapsed >= this.total) { this.stop(true); return; }
+            while (this.plan[this.idx + 1] && elapsed >= this.plan[this.idx].end) { this.idx += 1; this.enterPhase(this.plan[this.idx]); }
+            this.render(elapsed);
+          }
+          this.raf = requestAnimationFrame(() => this.tick());
+        },
+        render(elapsed) {
+          const p = this.plan[this.idx]; if (!p) return;
+          const local = clamp((elapsed - p.start) / p.duration, 0, 1);
+          const remaining = p.end - elapsed;
+          const sec = Math.ceil(remaining);
+          if (sec !== this.lastSecond) { this.lastSecond = sec; $('phaseCounter').textContent = String(sec); $('counterBox').classList.remove('bump'); void $('counterBox').offsetWidth; $('counterBox').classList.add('bump'); }
+          $('phaseProgress').style.width = `${local * 100}%`;
+          $('sessionProgress').style.width = `${elapsed / this.total * 100}%`;
+          $('remainingTime').textContent = `${fmt(this.total - elapsed)} resterend`;
+          $('roundInfo').textContent = p.breath ? `ronde ${p.round} • adem ${p.breath}` : `ronde ${p.round}`;
+          Visual.update(p, local, elapsed, this.ex);
+        },
+        enterPhase(p) {
+          if (!p) return;
+          const meta = PHASE[p.type] || PHASE.inhale;
+          document.documentElement.style.setProperty('--phaseColor', meta.color);
+          document.documentElement.style.setProperty('--phaseGlow', meta.glow);
+          $('phaseLabel').textContent = p.label || meta.nl;
+          $('phaseTypePill').textContent = meta.nl;
+          this.refreshGuidance();
+          Haptics.fire(p.type); AudioKit.phase(p.type);
+        },
+        refreshGuidance() {
+          const p = this.plan[this.idx]; if (!p || !this.ex) return;
+          const mode = Store.data.settings.mode;
+          const g = this.ex.guidance[mode] || this.ex.guidance.beginner;
+          const base = g[p.type] || g.inhale;
+          const side = p.meta?.nostril ? ` ${p.meta.nostril === 'left' ? 'Links actief.' : p.meta.nostril === 'right' ? 'Rechts actief.' : 'Beide neusgaten zacht gesloten.'}` : '';
+          $('phaseGuidance').textContent = `${base} ${Math.round(p.duration * 10) / 10} seconden.${side}`;
+          $('sessionMeta').textContent = `${Store.data.settings.mode} • absolute klok`;
+        },
+        togglePause() {
+          if (!this.active) return;
+          this.paused = !this.paused;
+          if (this.paused) { this.pauseStarted = now(); $('pauseButton').textContent = 'Hervat'; App.toast('Pauze. Timing hervat zonder drift.'); }
+          else { this.pauseTotal += now() - this.pauseStarted; $('pauseButton').textContent = 'Pauze'; }
+        },
+        jumpPhase(dir) {
+          if (!this.active) return;
+          this.idx = clamp(this.idx + dir, 0, this.plan.length - 1);
+          const target = this.plan[this.idx].start;
+          this.startAt = now() - target * 1000 - this.pauseTotal;
+          this.enterPhase(this.plan[this.idx]);
+          this.render(target);
+        },
+        syncLiveSliders() {
+          $('liveInhale').value = this.settings.inhale; $('liveHold').value = this.settings.hold; $('liveExhale').value = this.settings.exhale;
+          $('liveInhaleValue').textContent = `${Number(this.settings.inhale).toFixed(1)}s`;
+          $('liveHoldValue').textContent = `${Number(this.settings.hold).toFixed(1)}s`;
+          $('liveExhaleValue').textContent = `${Number(this.settings.exhale).toFixed(1)}s`;
+        },
+        updateLiveSettings() {
+          if (!this.active || !this.ex) return;
+          const elapsed = this.elapsed();
+          this.settings.inhale = Number($('liveInhale').value); this.settings.hold = Number($('liveHold').value); this.settings.exhale = Number($('liveExhale').value);
+          $('liveInhaleValue').textContent = `${this.settings.inhale.toFixed(1)}s`;
+          $('liveHoldValue').textContent = `${this.settings.hold.toFixed(1)}s`;
+          $('liveExhaleValue').textContent = `${this.settings.exhale.toFixed(1)}s`;
+          Store.setCustom(this.ex, this.settings);
+          this.plan = this.ex.build(this.settings, this.total);
+          this.idx = this.plan.findIndex(p => elapsed >= p.start && elapsed < p.end); if (this.idx < 0) this.idx = 0;
+          this.enterPhase(this.plan[this.idx]);
         }
+      };
 
-        function startSessionFromModal() {
-            if (!selectedExerciseForModal) return;
-            hideDetailModal();
-            
-            const duration = selectedExerciseForModal.selectedDuration || selectedExerciseForModal.default_duration;
-            startSession(selectedExerciseForModal, duration);
+      const Visual = {
+        renderer: null, scene: null, camera: null, orb: null, halo: null, particles: null, canvas2d: null, ctx: null, stage: null, visible: true, quality: 1, ex: null,
+        init() {
+          this.stage = $('visualStage'); this.canvas2d = $('ritualCanvas'); this.ctx = this.canvas2d.getContext('2d');
+          this.resize(); window.addEventListener('resize', () => this.resize(), { passive: true });
+          this.setQuality();
+          window.addEventListener('three-ready', () => { if (!this.renderer && window.THREE) this.initThree(); });
+          if (window.THREE) this.initThree();
+          else $('orbFallback').style.display = 'block';
+        },
+        setQuality() { this.quality = Store.data.settings.reducedMotion ? .45 : 1; },
+        initThree() {
+          try {
+            const THREE = window.THREE;
+            this.renderer = new THREE.WebGLRenderer({ canvas: $('threeCanvas'), alpha: true, antialias: true, powerPreference: 'high-performance' });
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Store.data.settings.reducedMotion ? 1.2 : 2));
+            this.renderer.setSize(this.stage.clientWidth, this.stage.clientHeight, false);
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(38, this.stage.clientWidth / this.stage.clientHeight, .1, 100);
+            this.camera.position.z = 7.2;
+            const geo = new THREE.SphereGeometry(1.36, 96, 96);
+            const mat = new THREE.MeshPhysicalMaterial({ color: 0x14B8A6, roughness: .22, metalness: .08, transmission: .18, thickness: .9, transparent: true, opacity: .88, clearcoat: 1, clearcoatRoughness: .16 });
+            this.orb = new THREE.Mesh(geo, mat); this.scene.add(this.orb);
+            const ringGeo = new THREE.TorusGeometry(1.92, .012, 16, 192);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: .46 });
+            this.halo = new THREE.Group();
+            for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(ringGeo, ringMat.clone()); r.rotation.x = Math.PI / 2 + i * .12; r.rotation.y = i * .38; r.scale.setScalar(1 + i * .18); this.halo.add(r); }
+            this.scene.add(this.halo);
+            const pointGeo = new THREE.BufferGeometry(); const count = 420; const pos = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) { const a = Math.random() * Math.PI * 2; const z = (Math.random() - .5) * 5.6; const rad = 2.2 + Math.random() * 2.1; pos[i*3] = Math.cos(a) * rad; pos[i*3+1] = Math.sin(a) * rad; pos[i*3+2] = z; }
+            pointGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const pointMat = new THREE.PointsMaterial({ color: 0xF6EAD1, size: .018, transparent: true, opacity: .46, depthWrite: false });
+            this.particles = new THREE.Points(pointGeo, pointMat); this.scene.add(this.particles);
+            const light = new THREE.PointLight(0xF6EAD1, 2.8, 20); light.position.set(2.8, 3.2, 4); this.scene.add(light);
+            const teal = new THREE.PointLight(0x14B8A6, 1.5, 18); teal.position.set(-3, -2, 3); this.scene.add(teal);
+            this.scene.add(new THREE.AmbientLight(0x334155, 1.6));
+            $('orbFallback').style.display = 'none';
+          } catch (e) { console.warn('WebGL fallback active', e); $('orbFallback').style.display = 'block'; }
+        },
+        resize() {
+          if (!this.stage) return;
+          const w = this.stage.clientWidth || 393, h = this.stage.clientHeight || 700;
+          this.canvas2d.width = Math.floor(w * Math.min(devicePixelRatio || 1, 2)); this.canvas2d.height = Math.floor(h * Math.min(devicePixelRatio || 1, 2));
+          this.ctx?.setTransform(this.canvas2d.width / w, 0, 0, this.canvas2d.height / h, 0, 0);
+          if (this.renderer) { this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
+        },
+        configure(ex) { this.ex = ex; this.resize(); },
+        update(p, local, elapsed, ex) {
+          if (!this.visible) return;
+          const type = p.type;
+          const target = type === 'inhale' ? lerp(.76, 1.22, ease(local)) : type === 'exhale' || type === 'pulse' ? lerp(1.22, .76, ease(local)) : type === 'hold' ? 1.18 + Math.sin(elapsed * 2.0) * .015 : .78 + Math.sin(elapsed * 2.4) * .012;
+          document.documentElement.style.setProperty('--orbScale', target.toFixed(4));
+          if (this.renderer && this.orb) this.updateThree(p, local, elapsed, target);
+          this.drawRitual(p, local, elapsed, ex, target);
+        },
+        updateThree(p, local, elapsed, scale) {
+          const THREE = window.THREE; const phaseColor = new THREE.Color(PHASE[p.type]?.color || '#14B8A6');
+          this.orb.scale.setScalar(scale);
+          this.orb.rotation.y = elapsed * .16; this.orb.rotation.x = Math.sin(elapsed * .12) * .08;
+          this.orb.material.color.lerp(phaseColor, .10);
+          this.orb.material.emissive = phaseColor.clone().multiplyScalar(.10);
+          this.halo.rotation.z = elapsed * .08; this.halo.rotation.y = Math.sin(elapsed * .18) * .16;
+          this.halo.children.forEach((r, i) => { r.scale.setScalar((1 + i * .17) * (1 + local * .05)); r.material.color.lerp(phaseColor, .06); r.material.opacity = (.24 + i * .07) * this.quality; });
+          if (this.particles) { this.particles.rotation.z = elapsed * .018; this.particles.rotation.y = elapsed * .012; this.particles.material.opacity = .20 + .28 * this.quality; }
+          this.renderer.render(this.scene, this.camera);
+        },
+        drawRitual(p, local, elapsed, ex, scale) {
+          const ctx = this.ctx; if (!ctx) return;
+          const w = this.stage.clientWidth, h = this.stage.clientHeight; ctx.clearRect(0, 0, w, h);
+          ctx.save(); ctx.globalAlpha = Store.data.settings.reducedMotion ? .55 : .92; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          const cx = w / 2, cy = h * .43; const color = PHASE[p.type]?.color || '#14B8A6';
+          const t = elapsed;
+          const reduced = Store.data.settings.reducedMotion;
+          const ring = (r, a, width = 1.2) => { ctx.strokeStyle = hexToRgba(color, a); ctx.lineWidth = width; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); };
+          for (let i = 0; i < (reduced ? 2 : 5); i++) ring(95 * scale + i * 22 + Math.sin(t * .9 + i) * 3, .20 - i * .025, 1 + i * .18);
+          switch (ex.visual) {
+            case 'ice': drawIce(ctx, w, h, cx, cy, local, t, color); break;
+            case 'nostril': drawNostril(ctx, w, h, cx, cy, local, t, p); break;
+            case 'sigh': drawSigh(ctx, w, h, cx, cy, local, t, p); break;
+            case 'resonance': drawResonance(ctx, w, h, cx, cy, local, t, color); break;
+            case 'viloma': drawViloma(ctx, w, h, cx, cy, local, t, p, color); break;
+            case 'bhramari': drawBhramari(ctx, w, h, cx, cy, local, t, color); break;
+            case 'kapal': drawKapal(ctx, w, h, cx, cy, local, t, p); break;
+            case 'box': drawBox(ctx, w, h, cx, cy, local, p, color); break;
+            case 'sleep': drawSleep(ctx, w, h, cx, cy, local, t, color); break;
+            case 'ocean': drawOcean(ctx, w, h, cx, cy, local, t, color); break;
+          }
+          ctx.restore();
         }
+      };
 
-        function startDailyProtocol() {
-            // Start with Wim Hof as example
-            const wimHof = exercises[0];
-            startSession(wimHof, 11);
-            
-            // In real app this would chain multiple
-            setTimeout(() => {
-                if (confirm('Na Wim Hof direct Physiological Sigh starten?')) {
-                    const sigh = exercises[2];
-                    startSession(sigh, 5);
-                }
-            }, 15000);
-        }
+      function hexToRgba(hex, alpha) {
+        const c = hex.replace('#',''); const n = parseInt(c, 16);
+        return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${alpha})`;
+      }
+      function drawIce(ctx, w, h, cx, cy, local, t) { ctx.strokeStyle = 'rgba(186,230,253,.42)'; ctx.lineWidth = 1.3; for (let i=0;i<18;i++){ const a=i*Math.PI/9+t*.12; const r=130+Math.sin(t+i)*18; ctx.beginPath(); ctx.moveTo(cx+Math.cos(a)*80,cy+Math.sin(a)*80); ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); ctx.stroke(); } }
+      function drawNostril(ctx, w, h, cx, cy, local, t, p) { const y=cy+142; ctx.strokeStyle='rgba(246,234,209,.32)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx-48,y); ctx.quadraticCurveTo(cx,y-26,cx+48,y); ctx.stroke(); const side=p.meta?.nostril||'both'; [['left',cx-28],['right',cx+28]].forEach(([s,x])=>{ctx.fillStyle=(side===s||side==='both')?'rgba(20,184,166,.86)':'rgba(246,234,209,.18)'; ctx.beginPath(); ctx.arc(x,y,8+(side===s?local*5:0),0,Math.PI*2); ctx.fill();}); }
+      function drawSigh(ctx, w, h, cx, cy, local, t, p) { ctx.strokeStyle = p.id==='top_inhale'?'rgba(212,175,55,.62)':'rgba(34,197,94,.52)'; ctx.lineWidth=3; for(let i=0;i<2;i++){ctx.beginPath(); ctx.arc(cx,cy,115+i*34+local*28,Math.PI*.05,Math.PI*1.95); ctx.stroke();} if(p.type==='exhale'){ctx.strokeStyle='rgba(56,189,248,.62)'; for(let i=0;i<4;i++){ctx.beginPath(); ctx.moveTo(cx-70+i*46, cy+142); ctx.quadraticCurveTo(cx-50+i*46, cy+170+Math.sin(t+i)*8, cx-20+i*46, cy+142); ctx.stroke();}} }
+      function drawResonance(ctx, w, h, cx, cy, local, t, color) { ctx.strokeStyle=hexToRgba(color,.62); ctx.lineWidth=2.4; ctx.beginPath(); for(let x=32;x<w-32;x++){const y=cy+154+Math.sin((x/w)*Math.PI*2+t*.9)*18; x===32?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke(); }
+      function drawViloma(ctx, w, h, cx, cy, local, t, p, color) { const baseY=cy+160; for(let i=0;i<3;i++){ctx.fillStyle=hexToRgba(color, p.breath>i ? .62 : .18); ctx.fillRect(cx-72+i*56, baseY-(i+1)*18, 38, (i+1)*18);} ctx.strokeStyle='rgba(246,234,209,.28)'; ctx.strokeRect(cx-82, baseY-72, 180, 72); }
+      function drawBhramari(ctx, w, h, cx, cy, local, t, color) { ctx.strokeStyle=hexToRgba(color,.44); for(let i=0;i<7;i++){ctx.lineWidth=1+i*.2; ctx.beginPath(); ctx.arc(cx,cy,75+i*18+Math.sin(t*8+i)*3,0,Math.PI*2); ctx.stroke();} ctx.fillStyle='rgba(246,234,209,.72)'; ctx.font='600 13px ui-sans-serif'; ctx.textAlign='center'; ctx.fillText('mmmmmm', cx, cy+154); }
+      function drawKapal(ctx, w, h, cx, cy, local, t, p) { ctx.strokeStyle=p.type==='pulse'?'rgba(251,113,133,.78)':'rgba(212,175,55,.46)'; ctx.lineWidth=2.3; for(let i=0;i<10;i++){const a=i*Math.PI*2/10+t*.7; const r1=72, r2=p.type==='pulse'?150+local*44:118; ctx.beginPath(); ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1); ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2); ctx.stroke();} }
+      function drawBox(ctx, w, h, cx, cy, local, p, color) { const s=210,x=cx-s/2,y=cy-s/2; ctx.strokeStyle='rgba(246,234,209,.22)'; ctx.lineWidth=2; ctx.strokeRect(x,y,s,s); ctx.strokeStyle=hexToRgba(color,.82); ctx.lineWidth=4; ctx.beginPath(); const map={inhale:0,hold:1,exhale:2,empty:3}; const side=map[p.type]??0; const points=[[x,y+s,x,y],[x,y,x+s,y],[x+s,y,x+s,y+s],[x+s,y+s,x,y+s]][side]; ctx.moveTo(points[0],points[1]); ctx.lineTo(lerp(points[0],points[2],local),lerp(points[1],points[3],local)); ctx.stroke(); }
+      function drawSleep(ctx, w, h, cx, cy, local, t, color) { ctx.strokeStyle=hexToRgba(color,.38); ctx.lineWidth=1.6; for(let i=0;i<24;i++){const a=i*Math.PI/12+t*.04; const r=126+Math.sin(i+t)*8; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r,1.7,0,Math.PI*2); ctx.stroke();} ctx.fillStyle='rgba(212,175,55,.62)'; ctx.beginPath(); ctx.arc(cx+95,cy-95,22,0,Math.PI*2); ctx.arc(cx+105,cy-103,22,0,Math.PI*2,true); ctx.fill('evenodd'); }
+      function drawOcean(ctx, w, h, cx, cy, local, t, color) { ctx.strokeStyle=hexToRgba(color,.50); ctx.lineWidth=2; for(let j=0;j<4;j++){ctx.beginPath(); for(let x=18;x<w-18;x++){const y=cy+135+j*16+Math.sin(x*.032+t*1.2+j)*8; x===18?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke();} }
 
-        function startSession(exercise, durationMinutes) {
-            currentExercise = exercise;
-            sessionDuration = durationMinutes * 60;
-            totalElapsed = 0;
-            currentPhaseIndex = 0;
-            isPaused = false;
-            
-            // UI Setup
-            document.getElementById('session-exercise-name').textContent = 
-                currentLanguage === 'nl' ? exercise.name_nl : exercise.name_en;
-            
-            document.getElementById('session-view').classList.remove('hidden');
-            document.getElementById('session-view').classList.add('flex', 'flex-col');
-            
-            // Reset visual
-            setupVisualForExercise(exercise);
-            
-            // Start timer
-            updateSessionTimer();
-            sessionInterval = setInterval(updateSessionTimer, 1000);
-            
-            // Start first phase
-            startPhase();
-            
-            // Fake live HR decrease simulation
-            simulateLiveHR();
-            
-            // Save start time
-            currentSessionData = {
-                exerciseId: exercise.id,
-                startTime: Date.now(),
-                duration: durationMinutes,
-                language: currentLanguage
-            };
-        }
-
-        function setupVisualForExercise(ex) {
-            const container = document.getElementById('main-visual');
-            const ringsContainer = document.getElementById('inner-rings');
-            const belly = document.getElementById('belly-indicator');
-            const special = document.getElementById('special-visual');
-            
-            // Clear previous
-            ringsContainer.innerHTML = '';
-            special.innerHTML = '';
-            belly.classList.add('hidden');
-            special.classList.add('hidden');
-            
-            // Base orb is already there
-            container.style.transform = 'scale(1)';
-            
-            // Add 3 energy rings
-            for (let i = 0; i < 3; i++) {
-                const ring = document.createElement('div');
-                ring.className = `energy-ring`;
-                const size = 240 + (i * 28);
-                ring.style.width = `${size}px`;
-                ring.style.height = `${size}px`;
-                ring.style.opacity = (0.15 + i * 0.08).toString();
-                ring.style.borderColor = i === 0 ? '#14b8a6' : '#5eead4';
-                ringsContainer.appendChild(ring);
-            }
-            
-            // Special visuals per mode
-            if (ex.mode === 'alternate') {
-                special.innerHTML = `
-                    <div class="hand-mudra mx-auto">
-                        <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Hand base -->
-                            <path d="M55 95 Q80 70 105 95" stroke="#14b8a6" stroke-width="18" stroke-linecap="round"/>
-                            <!-- Thumb -->
-                            <path d="M48 78 Q35 55 52 42" stroke="#14b8a6" stroke-width="12" stroke-linecap="round"/>
-                            <!-- Fingers -->
-                            <path d="M62 68 L62 38" stroke="#14b8a6" stroke-width="9" stroke-linecap="round"/>
-                            <path d="M75 65 L78 32" stroke="#14b8a6" stroke-width="9" stroke-linecap="round"/>
-                            <!-- Nostril indicators -->
-                            <circle id="nostril-left" cx="68" cy="105" r="7" fill="#14b8a6"/>
-                            <circle id="nostril-right" cx="92" cy="105" r="7" fill="#14b8a6"/>
-                        </svg>
-                    </div>
-                `;
-                special.classList.remove('hidden');
-            } 
-            else if (ex.mode === 'humming') {
-                special.innerHTML = `
-                    <div class="text-center">
-                        <div class="text-6xl mb-2">🐝</div>
-                        <div class="text-xs text-white/60">HUM • MMMMM...</div>
-                    </div>
-                `;
-                special.classList.remove('hidden');
-            }
-            else if (ex.mode === 'sigh' || ex.mode === 'phase') {
-                belly.classList.remove('hidden');
-                belly.style.transform = 'scaleY(0.6)';
-            }
-            
-            // Store rings for animation
-            window.energyRings = ringsContainer.children;
-        }
-
-        let liveHRInterval = null;
-
-        function simulateLiveHR() {
-            if (liveHRInterval) clearInterval(liveHRInterval);
-            
-            let currentHR = 72;
-            const hrDisplay = document.createElement('div');
-            hrDisplay.id = 'live-hr-display';
-            hrDisplay.className = 'absolute top-6 right-6 bg-black/70 text-xs px-3 py-1 rounded-2xl font-mono flex items-center gap-x-1.5';
-            hrDisplay.innerHTML = `<span>❤️</span> <span id="live-hr-value">${currentHR}</span> <span class="text-[9px] text-white/50">bpm</span>`;
-            
-            const visualContainer = document.getElementById('visual-container');
-            visualContainer.style.position = 'relative';
-            visualContainer.appendChild(hrDisplay);
-            
-            liveHRInterval = setInterval(() => {
-                if (isPaused || !document.getElementById('session-view').classList.contains('flex')) {
-                    clearInterval(liveHRInterval);
-                    return;
-                }
-                
-                // Slow decrease for calm techniques
-                const ex = currentExercise;
-                let decrease = 0.3;
-                
-                if (ex.mode === 'sigh' || ex.mode === 'resonance' || ex.id === 4) {
-                    decrease = 0.8; // faster drop
-                } else if (ex.mode === 'wimhof' || ex.mode === 'kapalbhati') {
-                    decrease = -0.4; // actually increases during power breathing
-                }
-                
-                currentHR = Math.max(48, Math.min(95, currentHR - decrease));
-                document.getElementById('live-hr-value').textContent = Math.round(currentHR);
-                
-                // Visual feedback
-                if (currentHR < 60) {
-                    hrDisplay.style.color = '#4ade80';
-                }
-            }, 1400);
-        }
-
-        function updateSessionTimer() {
-            if (isPaused) return;
-            
-            totalElapsed++;
-            const remaining = Math.max(0, sessionDuration - totalElapsed);
-            
-            const min = Math.floor(remaining / 60);
-            const sec = remaining % 60;
-            document.getElementById('session-timer').textContent = 
-                `${min}:${sec.toString().padStart(2, '0')} resterend`;
-            
-            // End session automatically
-            if (remaining <= 0) {
-                completeSession();
-            }
-            
-            // Update round counter for multi-round exercises
-            if (currentExercise.mode === 'wimhof' || currentExercise.mode === 'kapalbhati') {
-                const roundEl = document.getElementById('round-counter');
-                const currentRound = Math.floor(totalElapsed / (currentExercise.breaths_per_round * 1.8)) + 1;
-                roundEl.textContent = `${Math.min(currentRound, currentExercise.rounds)}/${currentExercise.rounds}`;
-            }
-        }
-
-        function startPhase() {
-            if (!currentExercise || isPaused) return;
-            
-            const ex = currentExercise;
-            let phase;
-            
-            if (ex.mode === 'wimhof') {
-                runWimHofRound();
-                return;
-            } 
-            else if (ex.mode === 'kapalbhati') {
-                runKapalbhatiRound();
-                return;
-            } 
-            else if (ex.phases) {
-                phase = ex.phases[currentPhaseIndex % ex.phases.length];
-            } else {
-                // Default phase
-                phase = { id: 'inhale', duration: 4, label_nl: 'Adem in', label_en: 'Inhale', visual: 'expand' };
-            }
-            
-            const labelEl = document.getElementById('phase-label');
-            const instructionEl = document.getElementById('phase-instruction');
-            const progressEl = document.getElementById('phase-progress');
-            
-            const label = currentLanguage === 'nl' ? phase.label_nl : phase.label_en;
-            labelEl.textContent = label.toUpperCase();
-            instructionEl.textContent = label;
-            
-            // Visual update
-            updateVisualForPhase(phase);
-            
-            // Play sound
-            if (soundEnabled) playPhaseSound(phase);
-            
-            // Voice
-            if (voiceEnabled) speakInstruction(label);
-            
-            // Phase timer
-            let phaseTime = 0;
-            const phaseDuration = phase.duration;
-            
-            if (phaseInterval) clearInterval(phaseInterval);
-            
-            phaseInterval = setInterval(() => {
-                if (isPaused) return;
-                
-                phaseTime += 0.1;
-                const percent = Math.min((phaseTime / phaseDuration) * 100, 100);
-                progressEl.style.width = `${percent}%`;
-                
-                document.getElementById('phase-time').textContent = `${phaseTime.toFixed(1)}s`;
-                
-                if (phaseTime >= phaseDuration) {
-                    clearInterval(phaseInterval);
-                    
-                    // Advance phase
-                    currentPhaseIndex++;
-                    
-                    // Special repeat logic for sigh
-                    if (ex.mode === 'sigh' && ex.repeat && currentPhaseIndex >= ex.phases.length) {
-                        currentPhaseIndex = 0;
-                    }
-                    
-                    startPhase();
-                }
-            }, 100);
-            
-            // Update phase name badge
-            document.getElementById('phase-name').textContent = phase.id.toUpperCase();
-        }
-
-        function updateVisualForPhase(phase) {
-            const orb = document.getElementById('main-visual');
-            const belly = document.getElementById('belly-indicator');
-            const rings = window.energyRings || [];
-            
-            // Reset
-            orb.style.transitionDuration = '400ms';
-            
-            if (phase.visual === 'expand') {
-                orb.style.transform = 'scale(1.18)';
-                orb.style.boxShadow = '0 0 80px rgba(20, 184, 166, 0.85), inset 0 0 50px rgba(255,255,255,0.2)';
-                
-                if (belly) belly.style.transform = 'scaleY(1.35)';
-                
-                rings.forEach((ring, i) => {
-                    ring.style.transform = `scale(${1.05 + i * 0.04})`;
-                    ring.style.opacity = (0.35 + i * 0.1).toString();
-                });
-                
-            } else if (phase.visual === 'contract') {
-                orb.style.transform = 'scale(0.82)';
-                orb.style.boxShadow = '0 0 40px rgba(20, 184, 166, 0.4), inset 0 0 30px rgba(0,0,0,0.5)';
-                
-                if (belly) belly.style.transform = 'scaleY(0.55)';
-                
-                rings.forEach((ring, i) => {
-                    ring.style.transform = `scale(${0.92 - i * 0.03})`;
-                    ring.style.opacity = (0.12 + i * 0.05).toString();
-                });
-                
-            } else if (phase.visual === 'hold' || phase.visual === 'hold_empty') {
-                orb.style.transform = 'scale(1.0)';
-                orb.style.boxShadow = '0 0 55px rgba(20, 184, 166, 0.55)';
-                
-                if (belly) belly.style.transform = 'scaleY(0.9)';
-                
-                rings.forEach(ring => {
-                    ring.style.transform = 'scale(1)';
-                    ring.style.opacity = '0.18';
-                });
-            }
-            
-            // Alternate nostril specific
-            if (currentExercise.mode === 'alternate' && phase.nostril) {
-                const left = document.getElementById('nostril-left');
-                const right = document.getElementById('nostril-right');
-                
-                if (left && right) {
-                    if (phase.nostril === 'left') {
-                        left.setAttribute('fill', '#14b8a6');
-                        right.setAttribute('fill', '#334155');
-                        left.setAttribute('r', '9');
-                        right.setAttribute('r', '5');
-                    } else {
-                        right.setAttribute('fill', '#14b8a6');
-                        left.setAttribute('fill', '#334155');
-                        right.setAttribute('r', '9');
-                        left.setAttribute('r', '5');
-                    }
-                }
-            }
-        }
-
-        function runWimHofRound() {
-            const ex = currentExercise;
-            const labelEl = document.getElementById('phase-label');
-            const instructionEl = document.getElementById('phase-instruction');
-            const progressEl = document.getElementById('phase-progress');
-            const special = document.getElementById('special-visual');
-            
-            special.innerHTML = `
-                <div class="text-center">
-                    <div class="text-[13px] text-white/50 mb-1">RONDE <span id="wim-round">1</span>/${ex.rounds}</div>
-                    <div id="breath-count" class="text-7xl font-semibold tabular-nums text-teal-400">0</div>
-                    <div class="text-xs text-white/50 -mt-1">/ ${ex.breaths_per_round}</div>
-                </div>
-            `;
-            special.classList.remove('hidden');
-            
-            let currentBreath = 0;
-            let round = 1;
-            
-            labelEl.textContent = "POWER BREATHING";
-            instructionEl.textContent = currentLanguage === 'nl' ? 
-                "Krachtige inademing • ontspannen uitademing" : 
-                "Powerful inhale • relaxed exhale";
-            
-            // Clear any previous
-            if (phaseInterval) clearInterval(phaseInterval);
-            
-            const breathInterval = setInterval(() => {
-                if (isPaused) return;
-                
-                currentBreath++;
-                document.getElementById('breath-count').textContent = currentBreath;
-                
-                // Visual pulse on each breath
-                const orb = document.getElementById('main-visual');
-                orb.style.transitionDuration = '80ms';
-                orb.style.transform = 'scale(1.22)';
-                
-                setTimeout(() => {
-                    if (!isPaused) orb.style.transform = 'scale(0.95)';
-                }, 120);
-                
-                if (currentBreath >= ex.breaths_per_round) {
-                    clearInterval(breathInterval);
-                    
-                    // Long exhale + hold
-                    labelEl.textContent = "LANG UITADEMEN";
-                    instructionEl.textContent = currentLanguage === 'nl' ? 
-                        "Volledig uitademen en vasthouden..." : 
-                        "Full exhale and hold...";
-                    
-                    orb.style.transitionDuration = '600ms';
-                    orb.style.transform = 'scale(0.65)';
-                    
-                    setTimeout(() => {
-                        if (!document.getElementById('session-view').classList.contains('flex')) return;
-                        
-                        labelEl.textContent = "KUMBHAKA HOLD";
-                        instructionEl.textContent = currentLanguage === 'nl' ? 
-                            `${ex.hold_time} seconden vasthouden` : 
-                            `Hold for ${ex.hold_time} seconds`;
-                        
-                        let holdTime = 0;
-                        const holdInterval = setInterval(() => {
-                            holdTime += 1;
-                            document.getElementById('phase-time').textContent = `${holdTime}s / ${ex.hold_time}s`;
-                            
-                            if (holdTime >= ex.hold_time) {
-                                clearInterval(holdInterval);
-                                
-                                round++;
-                                if (round > ex.rounds) {
-                                    completeSession();
-                                } else {
-                                    document.getElementById('wim-round').textContent = round;
-                                    currentBreath = 0;
-                                    document.getElementById('breath-count').textContent = '0';
-                                    runWimHofRound(); // next round
-                                }
-                            }
-                        }, 1000);
-                    }, 2800);
-                }
-            }, 1600); // ~35 breaths in ~56 seconds
-        }
-
-        function runKapalbhatiRound() {
-            // Similar fast breath implementation
-            const ex = currentExercise;
-            const labelEl = document.getElementById('phase-label');
-            const instructionEl = document.getElementById('phase-instruction');
-            
-            labelEl.textContent = "KAPALBHATI";
-            instructionEl.textContent = currentLanguage === 'nl' ? 
-                "Snelle uitademingen • buik pompen" : 
-                "Fast exhales • pump belly";
-            
-            let breath = 0;
-            const interval = setInterval(() => {
-                if (isPaused || !document.getElementById('session-view').classList.contains('flex')) {
-                    clearInterval(interval);
-                    return;
-                }
-                
-                breath++;
-                const orb = document.getElementById('main-visual');
-                orb.style.transitionDuration = '60ms';
-                orb.style.transform = breath % 2 === 0 ? 'scale(0.82)' : 'scale(1.15)';
-                
-                if (breath >= ex.breaths_per_round) {
-                    clearInterval(interval);
-                    // After round: long hold
-                    setTimeout(() => {
-                        if (currentExercise.id === 7) {
-                            completeSession();
-                        }
-                    }, 4200);
-                }
-            }, 420);
-        }
-
-        function skipPhase() {
-            if (phaseInterval) clearInterval(phaseInterval);
-            currentPhaseIndex++;
-            startPhase();
-        }
-
-        function pauseSession() {
-            isPaused = !isPaused;
-            const btn = document.getElementById('pause-btn');
-            const icon = btn.querySelector('i');
-            
-            if (isPaused) {
-                icon.classList.remove('fa-pause');
-                icon.classList.add('fa-play');
-                btn.style.color = '#f59e0b';
-            } else {
-                icon.classList.remove('fa-play');
-                icon.classList.add('fa-pause');
-                btn.style.color = '';
-                startPhase(); // resume
-            }
-        }
-
-        function toggleSound() {
-            soundEnabled = !soundEnabled;
-            const btn = document.getElementById('sound-btn');
-            const icon = btn.querySelector('i');
-            
-            if (soundEnabled) {
-                icon.classList.remove('fa-volume-mute');
-                icon.classList.add('fa-volume-up');
-                btn.style.color = '';
-            } else {
-                icon.classList.remove('fa-volume-up');
-                icon.classList.add('fa-volume-mute');
-                btn.style.color = '#f87171';
-            }
-        }
-
-        function toggleVoice() {
-            voiceEnabled = !voiceEnabled;
-            const btn = document.getElementById('voice-btn');
-            const icon = btn.querySelector('i');
-            
-            if (voiceEnabled) {
-                icon.classList.remove('fa-microphone-slash');
-                icon.classList.add('fa-microphone');
-                btn.style.color = '';
-            } else {
-                icon.classList.remove('fa-microphone');
-                icon.classList.add('fa-microphone-slash');
-                btn.style.color = '#f87171';
-            }
-        }
-
-        function initAudio() {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            } catch(e) {
-                console.log('Web Audio not supported');
-            }
-        }
-
-        function playPhaseSound(phase) {
-            if (!audioContext || !soundEnabled) return;
-            
-            try {
-                const osc = audioContext.createOscillator();
-                const gain = audioContext.createGain();
-                const filter = audioContext.createBiquadFilter();
-                
-                osc.type = phase.visual === 'expand' ? 'sine' : 'sawtooth';
-                osc.frequency.value = phase.visual === 'expand' ? 220 : 180;
-                
-                filter.type = 'lowpass';
-                filter.frequency.value = 1200;
-                
-                gain.gain.value = 0.08;
-                
-                const now = audioContext.currentTime;
-                gain.gain.setValueAtTime(0.08, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 1.2);
-                
-                osc.connect(filter);
-                filter.connect(gain);
-                gain.connect(audioContext.destination);
-                
-                osc.start(now);
-                osc.stop(now + 1.4);
-                
-                // Om drone for certain phases
-                if (phase.id.includes('hold') || phase.id === 'humming') {
-                    const drone = audioContext.createOscillator();
-                    const droneGain = audioContext.createGain();
-                    drone.type = 'sine';
-                    drone.frequency.value = 108; // Om frequency
-                    
-                    droneGain.gain.value = 0.03;
-                    droneGain.gain.linearRampToValueAtTime(0.001, now + 3.5);
-                    
-                    drone.connect(droneGain);
-                    droneGain.connect(audioContext.destination);
-                    drone.start(now);
-                    drone.stop(now + 3.8);
-                }
-            } catch(e) {}
-        }
-
-        function speakInstruction(text) {
-            if (!voiceEnabled || !('speechSynthesis' in window)) return;
-            
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.92;
-            utterance.pitch = 0.95;
-            utterance.volume = 0.85;
-            
-            // Try to pick Dutch voice
-            const voices = speechSynthesis.getVoices();
-            const dutchVoice = voices.find(v => v.lang.includes('nl') || v.name.toLowerCase().includes('dutch'));
-            if (dutchVoice) utterance.voice = dutchVoice;
-            
-            speechSynthesis.speak(utterance);
-        }
-
-        function endSession() {
-            if (sessionInterval) clearInterval(sessionInterval);
-            if (phaseInterval) clearInterval(phaseInterval);
-            if (liveHRInterval) clearInterval(liveHRInterval);
-            
-            document.getElementById('session-view').classList.remove('flex');
-            document.getElementById('session-view').classList.add('hidden');
-            
-            // Clean up live HR display
-            const liveHR = document.getElementById('live-hr-display');
-            if (liveHR) liveHR.remove();
-            
-            // Optional: show quick summary if session was long enough
-            if (totalElapsed > 120) {
-                setTimeout(() => {
-                    showQuickSummary();
-                }, 600);
-            }
-        }
-
-        function completeSession() {
-            if (sessionInterval) clearInterval(sessionInterval);
-            if (phaseInterval) clearInterval(phaseInterval);
-            if (liveHRInterval) clearInterval(liveHRInterval);
-            
-            const liveHR = document.getElementById('live-hr-display');
-            if (liveHR) liveHR.remove();
-            
-            document.getElementById('session-view').classList.remove('flex');
-            document.getElementById('session-view').classList.add('hidden');
-            
-            // Update stats
-            const currentHR = parseInt(document.getElementById('resting-hr').textContent);
-            const newHR = Math.max(46, currentHR - Math.floor(Math.random() * 5) - 6);
-            document.getElementById('resting-hr').textContent = newHR;
-            localStorage.setItem('last_resting_hr', newHR);
-            
-            const currentHRV = parseInt(document.getElementById('hrv-score').textContent);
-            const newHRV = currentHRV + Math.floor(Math.random() * 8) + 9;
-            document.getElementById('hrv-score').textContent = newHRV;
-            
-            saveStreak();
-            
-            // Show beautiful summary
-            showSummaryModal(currentHR - newHR, newHRV - currentHRV);
-        }
-
-        function showSummaryModal(hrDrop, hrvGain) {
-            document.getElementById('summary-hr-drop').textContent = `-${hrDrop}`;
-            document.getElementById('summary-hrv-gain').textContent = `+${hrvGain}`;
-            
-            const modal = document.getElementById('summary-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            // Confetti
-            createConfetti();
-        }
-
-        function hideSummary() {
-            const modal = document.getElementById('summary-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function createConfetti() {
-            const colors = ['#14b8a6', '#5eead4', '#f0fdfa'];
-            for (let i = 0; i < 42; i++) {
-                const particle = document.createElement('div');
-                particle.style.position = 'fixed';
-                particle.style.left = Math.random() * 100 + 'vw';
-                particle.style.top = '-20px';
-                particle.style.width = '7px';
-                particle.style.height = '7px';
-                particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.opacity = Math.random() * 0.7 + 0.4;
-                particle.style.zIndex = '9999';
-                particle.style.pointerEvents = 'none';
-                document.body.appendChild(particle);
-                
-                const duration = Math.random() * 2800 + 2200;
-                const angle = Math.random() * 70 + 55;
-                
-                particle.animate([
-                    { 
-                        transform: `translateY(0) rotate(0deg)`,
-                        opacity: particle.style.opacity
-                    },
-                    { 
-                        transform: `translateY(${window.innerHeight + 100}px) rotate(${angle * 4}deg)`,
-                        opacity: 0
-                    }
-                ], {
-                    duration: duration,
-                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
-                }).onfinish = () => particle.remove();
-            }
-        }
-
-        function showSettings() {
-            const settingsHTML = `
-                <div class="fixed inset-0 bg-black/90 z-[400] flex items-end" onclick="this.remove()">
-                    <div onclick="event.stopImmediatePropagation()" class="bg-[#111111] w-full max-w-[420px] mx-auto rounded-t-3xl p-6">
-                        <div class="flex justify-between mb-6">
-                            <div class="text-xl font-semibold">Instellingen</div>
-                            <button onclick="this.closest('.fixed').remove()" class="text-white/50">✕</button>
-                        </div>
-                        
-                        <div class="space-y-5 text-sm">
-                            <div class="flex items-center justify-between py-1">
-                                <div>Standaard taal</div>
-                                <div class="flex bg-white/5 rounded-3xl p-1 text-xs">
-                                    <div onclick="setLanguage('nl'); this.closest('.fixed').remove()" class="px-4 py-1 rounded-3xl ${currentLanguage === 'nl' ? 'bg-teal-500 text-black' : ''}">NL</div>
-                                    <div onclick="setLanguage('en'); this.closest('.fixed').remove()" class="px-4 py-1 rounded-3xl ${currentLanguage === 'en' ? 'bg-teal-500 text-black' : ''}">EN</div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between py-1">
-                                <div>Automatische voice guidance</div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" checked class="sr-only peer" onchange="voiceEnabled = this.checked">
-                                    <div class="w-11 h-6 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-                                </label>
-                            </div>
-                            
-                            <div class="pt-4 border-t border-white/10 text-[10px] text-white/50">
-                                PranaGuru v1.0 • Gemaakt voor Floris van de Oever<br>
-                                Gecertificeerd niveau • Privé gebruik
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', settingsHTML);
-        }
-
-        function setLanguage(lang, initial = false) {
-            currentLanguage = lang;
-            
-            // Update buttons
-            document.getElementById('lang-nl').className = lang === 'nl' ? 
-                'px-3 py-1 rounded-3xl bg-teal-500 text-black font-medium' : 
-                'px-3 py-1 rounded-3xl text-white/70 hover:text-white';
-            
-            document.getElementById('lang-en').className = lang === 'en' ? 
-                'px-3 py-1 rounded-3xl bg-teal-500 text-black font-medium' : 
-                'px-3 py-1 rounded-3xl text-white/70 hover:text-white';
-            
-            if (!initial) {
-                // Re-render exercises with new language
-                renderExercises();
-                
-                // If session active, update texts
-                if (!document.getElementById('session-view').classList.contains('hidden')) {
-                    const nameEl = document.getElementById('session-exercise-name');
-                    if (currentExercise) {
-                        nameEl.textContent = lang === 'nl' ? currentExercise.name_nl : currentExercise.name_en;
-                    }
-                }
-            }
-        }
-
-        function registerPWA() {
-            // Register service worker for offline (simple)
-            if ('serviceWorker' in navigator) {
-                // In production you would register sw.js
-                console.log('%c[PranaGuru] PWA ready (manifest + standalone mode supported)', 'color:#64748b');
-            }
-            
-            // iOS specific
-            if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
-                console.log('%c[PranaGuru] iPhone portrait optimized', 'color:#14b8a6');
-            }
-        }
-
-        // Keyboard support
-        document.addEventListener('keydown', function(e) {
-            if (e.key === '?' && document.getElementById('session-view').classList.contains('flex')) {
-                e.preventDefault();
-                const ex = currentExercise;
-                alert(`Huidige oefening: ${ex.name_nl}\n\nFase: ${document.getElementById('phase-label').textContent}\n\nTip: Gebruik de skip knop of pauzeer met spatie.`);
-            }
-            
-            if (e.key === ' ' && document.getElementById('session-view').classList.contains('flex')) {
-                e.preventDefault();
-                pauseSession();
-            }
-            
-            if (e.key.toLowerCase() === 's' && document.getElementById('session-view').classList.contains('flex')) {
-                skipPhase();
-            }
-        });
-
-        // Boot the app
-        window.onload = function() {
-            initApp();
-            
-            // Easter egg: console message
-            console.log('%c[PranaGuru] All systems nominal. You are ready for the highest level.', 'color:#14b8a6; font-size:9px');
-        };
-
-        // Make some functions global for debugging
-        window.PranaGuru = { startSession, exercises, setLanguage };
-    </script>
+      document.addEventListener('DOMContentLoaded', () => App.init());
+    })();
+  </script>
 </body>
 </html>

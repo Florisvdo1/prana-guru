@@ -1,17 +1,52 @@
 {
-  "name": "PranaGuru - Advanced Pranayama",
+  "id": "https://florisvdo1.github.io/prana-guru/",
+  "name": "PranaGuru Elite Breath Mastery",
   "short_name": "PranaGuru",
-  "description": "Guru-level breathing exercises with perfect visual sync, timing & biofeedback. For certified practitioners only.",
+  "description": "Native-achtige PWA voor precieze ademhaling, pranayama, live guidance, haptics en offline sessies.",
+  "lang": "nl-NL",
+  "dir": "ltr",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#14b8a6",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
   "orientation": "portrait",
+  "theme_color": "#0F172A",
+  "background_color": "#0F172A",
+  "categories": ["health", "fitness", "lifestyle", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%2314b8a6'/%3E%3Cpath d='M30 40 Q50 20 70 40' stroke='white' stroke-width='8' fill='none'/%3E%3Ccircle cx='50' cy='55' r='12' fill='white'/%3E%3C/svg%3E",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
+      "name": "Start Resonance",
+      "short_name": "Resonance",
+      "description": "Open PranaGuru voor een rustige 6 BPM sessie.",
+      "url": "./index.html#resonance",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Start 4-7-8",
+      "short_name": "4-7-8",
+      "description": "Open PranaGuru voor slaapademhaling.",
+      "url": "./index.html#478",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    { "src": "assets/splash-1179x2556.png", "sizes": "1179x2556", "type": "image/png", "form_factor": "narrow" }
+  ],
+  "widgets": [
+    {
+      "name": "PranaGuru Breath Cue",
+      "short_name": "Breath Cue",
+      "description": "Glanceable ademcue voor platformen die PWA widgets ondersteunen.",
+      "tag": "breath-cue",
+      "template": "./index.html#widget",
+      "ms_ac_template": "./index.html#widget",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
